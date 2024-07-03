@@ -30,4 +30,20 @@ func TestOpenDALNew(t *testing.T) {
 	result, err := op.Read(path)
 	assert.Nil(err)
 	assert.Equal(data, result)
+
+	// AliyunDrive required `services-aliyun-drive` enabled
+	/* opts.Set("client_id", os.Getenv("OPENDAL_ALIYUN_DRIVE_CLIENT_ID"))
+	opts.Set("client_secret", os.Getenv("OPENDAL_ALIYUN_DRIVE_CLIENT_SECRET"))
+	opts.Set("refresh_token", os.Getenv("OPENDAL_ALIYUN_DRIVE_REFRESH_TOKEN"))
+	opts.Set("drive_type", os.Getenv("OPENDAL_ALIYUN_DRIVE_DRIVE_TYPE"))
+	opts.Set("root", "/opendal/")
+
+	op, err = opendal.NewOperator("aliyun_drive", opts)
+
+	err = op.Write(path, data)
+	assert.Nil(err)
+
+	result, err = op.Read(path)
+	assert.Nil(err)
+	assert.Equal(data, result) */
 }

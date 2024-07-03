@@ -3,6 +3,7 @@ package opendal
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"unsafe"
 
 	"github.com/ebitengine/purego"
@@ -48,7 +49,7 @@ var (
 	}
 )
 
-type ResultOperatorNew struct {
+type resultOperatorNew struct {
 	op    *Operator
 	error *Error
 }
@@ -67,7 +68,7 @@ func (o *Operator) Read(path string) ([]byte, error) {
 
 type Error struct {
 	code    int32
-	message OpenDALBytes
+	message openDALBytes
 }
 
 func (e *Error) Error() string {
@@ -86,12 +87,16 @@ type OperatorOptions struct {
 	inner uintptr
 }
 
-type ResultRead struct {
-	data  *OpenDALBytes
+func (opts *OperatorOptions) Set(key, value string) error {
+	return operatorOptionsSet(opts, key, value)
+}
+
+type resultRead struct {
+	data  *openDALBytes
 	error *Error
 }
 
-type OpenDALBytes struct {
+type openDALBytes struct {
 	data []byte
 }
 
@@ -120,7 +125,50 @@ func NewOptions() (*OperatorOptions, error) {
 		return opts
 	}
 	opts := fn()
+	runtime.SetFinalizer(&opts, func(_ *OperatorOptions) {
+		operatorOptionsFree(&opts)
+	})
 	return &opts, nil
+}
+
+func operatorOptionsSet(opts *OperatorOptions, key, value string) error {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(&cif, ffi.DefaultAbi, 3, &ffi.TypeVoid, &ffi.TypePointer, &ffi.TypePointer, &ffi.TypePointer); status != ffi.OK {
+		return errors.New(status.String())
+	}
+	sym, err := purego.Dlsym(libopendal, "opendal_operator_options_set")
+	if err != nil {
+		return err
+	}
+	fn := func(opts *OperatorOptions, key, value string) error {
+		byteKey, err := unix.BytePtrFromString(key)
+		if err != nil {
+			return err
+		}
+		byteValue, err := unix.BytePtrFromString(value)
+		if err != nil {
+			return err
+		}
+		ffi.Call(&cif, sym, nil, unsafe.Pointer(opts), unsafe.Pointer(&byteKey), unsafe.Pointer(&byteValue))
+		return nil
+	}
+	return fn(opts, key, value)
+}
+
+func operatorOptionsFree(opts *OperatorOptions) error {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(&cif, ffi.DefaultAbi, 1, &ffi.TypeVoid, &ffi.TypePointer); status != ffi.OK {
+		return errors.New(status.String())
+	}
+	sym, err := purego.Dlsym(libopendal, "opendal_operator_options_free")
+	if err != nil {
+		return err
+	}
+	fn := func(opts *OperatorOptions) {
+		ffi.Call(&cif, sym, nil, unsafe.Pointer(&opts))
+	}
+	fn(opts)
+	return nil
 }
 
 func NewOperator(name string, opts *OperatorOptions) (*Operator, error) {
@@ -132,16 +180,16 @@ func NewOperator(name string, opts *OperatorOptions) (*Operator, error) {
 	if err != nil {
 		return nil, err
 	}
-	fn := func(name string, opts OperatorOptions) (*ResultOperatorNew, error) {
+	fn := func(name string, opts *OperatorOptions) (*resultOperatorNew, error) {
 		byteName, err := unix.BytePtrFromString(name)
 		if err != nil {
 			return nil, err
 		}
-		var result ResultOperatorNew
-		ffi.Call(&cif, sym, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(&opts))
+		var result resultOperatorNew
+		ffi.Call(&cif, sym, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(opts))
 		return &result, nil
 	}
-	result, err := fn(name, *opts)
+	result, err := fn(name, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +213,7 @@ func operatorWrite(op *Operator, path string, data []byte) error {
 		if err != nil {
 			return err
 		}
-		bytes := OpenDALBytes{
+		bytes := openDALBytes{
 			data: data,
 		}
 		var e *Error
@@ -188,12 +236,12 @@ func operatorRead(op *Operator, path string) ([]byte, error) {
 		panic(status)
 	}
 	sym, err := purego.Dlsym(libopendal, "opendal_operator_read")
-	fn := func(op *Operator, path string) (*ResultRead, error) {
+	fn := func(op *Operator, path string) (*resultRead, error) {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
 			return nil, err
 		}
-		var r ResultRead
+		var r resultRead
 		ffi.Call(&cif, sym, unsafe.Pointer(&r), unsafe.Pointer(&op), unsafe.Pointer(&bytePath))
 		return &r, nil
 	}
