@@ -29,13 +29,16 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (*Operator, error) {
 	for key, value := range opts {
 		operatorOptionsSet(libopendal, opt, key, value)
 	}
-	defer operatorOptionsFree(libopendal, opt)
 
 	inner, err := newOperator(libopendal, scheme, opt)
 	if err != nil {
+		operatorOptionsFree(libopendal, opt)
 		purego.Dlclose(libopendal)
 		return nil, err
 	}
+
+	defer operatorOptionsFree(libopendal, opt)
+
 	op := &Operator{
 		inner: inner,
 	}
