@@ -1,3 +1,0 @@
-[submodule "opendal"]
-	path = opendal
-	url = https://github.com/apache/opendal
