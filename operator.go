@@ -23,47 +23,43 @@ func newOperator(libopendal uintptr, scheme Schemer, opts *operatorOptions) (op 
 	if err != nil {
 		return
 	}
-	fn := func(scheme Schemer, opts *operatorOptions) (*operator, error) {
-		byteName, err := unix.BytePtrFromString(scheme.Scheme())
-		if err != nil {
-			return nil, err
-		}
-		var result resultOperatorNew
-		ffi.Call(&cif, sym, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(opts))
-		if result.error != nil {
-			return nil, result.error
-		}
-		return result.op, nil
+	var byteName *byte
+	byteName, err = unix.BytePtrFromString(scheme.Scheme())
+	if err != nil {
+		return
 	}
-	return fn(scheme, opts)
+	var result resultOperatorNew
+	ffi.Call(&cif, sym, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(opts))
+	if result.error != nil {
+		err = result.error
+		return
+	}
+	op = result.op
+	return
 }
 
 type operatorOptions struct {
 	inner uintptr
 }
 
-func newOperatorOptions(libopendal uintptr) (*operatorOptions, error) {
+func newOperatorOptions(libopendal uintptr) (opts operatorOptions, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 0,
 		&ffi.TypePointer,
 	); status != ffi.OK {
-		return nil, errors.New(status.String())
+		err = errors.New(status.String())
+		return
 	}
 	sym, err := purego.Dlsym(libopendal, "opendal_operator_options_new")
 	if err != nil {
-		return nil, err
+		return
 	}
-	fn := func() operatorOptions {
-		var opts operatorOptions
-		ffi.Call(&cif, sym, unsafe.Pointer(&opts))
-		return opts
-	}
-	opts := fn()
-	return &opts, nil
+	ffi.Call(&cif, sym, unsafe.Pointer(&opts))
+	return
 }
 
-func operatorOptionsSet(libopendal uintptr, opts *operatorOptions, key, value string) error {
+func operatorOptionsSet(libopendal uintptr, opts *operatorOptions, key, value string) (err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 3,
@@ -78,22 +74,23 @@ func operatorOptionsSet(libopendal uintptr, opts *operatorOptions, key, value st
 	if err != nil {
 		return err
 	}
-	fn := func(opts *operatorOptions, key, value string) error {
-		byteKey, err := unix.BytePtrFromString(key)
-		if err != nil {
-			return err
-		}
-		byteValue, err := unix.BytePtrFromString(value)
-		if err != nil {
-			return err
-		}
-		ffi.Call(&cif, sym, nil, unsafe.Pointer(opts), unsafe.Pointer(&byteKey), unsafe.Pointer(&byteValue))
-		return nil
+	var (
+		byteKey   *byte
+		byteValue *byte
+	)
+	byteKey, err = unix.BytePtrFromString(key)
+	if err != nil {
+		return err
 	}
-	return fn(opts, key, value)
+	byteValue, err = unix.BytePtrFromString(value)
+	if err != nil {
+		return err
+	}
+	ffi.Call(&cif, sym, nil, unsafe.Pointer(opts), unsafe.Pointer(&byteKey), unsafe.Pointer(&byteValue))
+	return
 }
 
-func operatorOptionsFree(libopendal uintptr, opts *operatorOptions) error {
+func operatorOptionsFree(libopendal uintptr, opts *operatorOptions) (err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,
@@ -106,9 +103,6 @@ func operatorOptionsFree(libopendal uintptr, opts *operatorOptions) error {
 	if err != nil {
 		return err
 	}
-	fn := func(opts operatorOptions) {
-		ffi.Call(&cif, sym, nil, unsafe.Pointer(&opts))
-	}
-	fn(*opts)
-	return nil
+	ffi.Call(&cif, sym, nil, unsafe.Pointer(opts))
+	return
 }
