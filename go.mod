@@ -6,7 +6,7 @@ require (
 	github.com/ebitengine/purego v0.7.1
 	github.com/jupiterrider/ffi v0.1.0-beta.9
 	github.com/stretchr/testify v1.9.0
-	github.com/yuchanns/opendal-go-services v0.0.0-20240704102412-e5cbb070fae7
+	github.com/yuchanns/opendal-go-services v0.0.0-20240704131843-72a35ce1080d
 	golang.org/x/sys v0.20.0
 )
 
