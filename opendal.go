@@ -16,15 +16,15 @@ type Operator struct {
 	read operatorRead
 }
 
-func NewOperator(scheme Schemer, opts OperatorOptions) (*Operator, error) {
+func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error) {
 	libopendal, err := purego.Dlopen(scheme.Path(), purego.RTLD_LAZY|purego.RTLD_GLOBAL)
 	if err != nil {
-		return nil, err
+		return
 	}
 	opt, err := newOperatorOptions(libopendal)
 	if err != nil {
 		purego.Dlclose(libopendal)
-		return nil, err
+		return
 	}
 	for key, value := range opts {
 		operatorOptionsSet(libopendal, opt, key, value)
@@ -34,12 +34,12 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (*Operator, error) {
 	if err != nil {
 		operatorOptionsFree(libopendal, opt)
 		purego.Dlclose(libopendal)
-		return nil, err
+		return
 	}
 
 	defer operatorOptionsFree(libopendal, opt)
 
-	op := &Operator{
+	op = &Operator{
 		inner: inner,
 	}
 
@@ -50,9 +50,9 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (*Operator, error) {
 	for _, register := range operatorRegisters {
 		err = register(libopendal, op)
 		if err != nil {
-			return nil, err
+			return
 		}
 	}
 
-	return op, nil
+	return
 }
