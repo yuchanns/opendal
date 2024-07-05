@@ -8,7 +8,7 @@ import (
 
 var (
 	typeError = ffi.Type{
-		Type: ffi.Pointer,
+		Type: ffi.Struct,
 		Elements: &[]*ffi.Type{
 			&ffi.TypeSint32,
 			&typeBytes,

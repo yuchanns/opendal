@@ -19,7 +19,7 @@ func operatorWriteRegister(libopendal uintptr, op *Operator) (err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 3,
-		&typeError,
+		&ffi.TypePointer,
 		&ffi.TypePointer,
 		&ffi.TypePointer,
 		&typeBytes,
