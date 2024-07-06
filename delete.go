@@ -36,14 +36,14 @@ func operatorDeleteRegister(ctx context.Context, libopendal uintptr) (newCtx con
 		if err != nil {
 			return err
 		}
-		var e *Error
+		var e *opendalError
 		ffi.Call(
 			&cif, fn,
 			unsafe.Pointer(&e),
 			unsafe.Pointer(&op),
 			unsafe.Pointer(&bytePath),
 		)
-		return e
+		return e.parse()
 	}
 	newCtx = context.WithValue(ctx, cFnOperatorDelete, cFn)
 	return

@@ -32,7 +32,7 @@ func newOperator(libopendal uintptr, scheme Schemer, opts *operatorOptions) (op 
 	var result resultOperatorNew
 	ffi.Call(&cif, sym, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(opts))
 	if result.error != nil {
-		err = result.error
+		err = result.error.parse()
 		return
 	}
 	op = result.op

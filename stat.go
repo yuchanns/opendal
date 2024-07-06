@@ -17,7 +17,7 @@ func (op *Operator) Stat(path string) (*Metadata, error) {
 		return nil, err
 	}
 	if result.error != nil {
-		return nil, result.error
+		return nil, result.error.parse()
 	}
 	return newMetadata(op.ctx, result.meta), nil
 }
@@ -51,7 +51,7 @@ func operatorStatRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 			unsafe.Pointer(&bytePath),
 		)
 		if result.error != nil {
-			return nil, result.error
+			return nil, result.error.parse()
 		}
 		return &result, nil
 	}

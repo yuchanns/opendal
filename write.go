@@ -40,10 +40,11 @@ func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 		if err != nil {
 			return err
 		}
-		bytes := bytes{
-			data: data,
+		bytes := toOpendalBytes(data)
+		if len(data) > 0 {
+			bytes.data = &data[0]
 		}
-		var e *Error
+		var e *opendalError
 		ffi.Call(
 			&cif, fn,
 			unsafe.Pointer(&e),
@@ -51,7 +52,7 @@ func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 			unsafe.Pointer(&bytePath),
 			unsafe.Pointer(&bytes),
 		)
-		return e
+		return e.parse()
 	}
 	newCtx = context.WithValue(ctx, cFnOperatorWrite, cFn)
 	return
