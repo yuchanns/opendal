@@ -20,6 +20,7 @@ func getCFn[T any](ctx context.Context, key string) T {
 }
 
 var cFnRegisters = []cFnRegister{
+	// two registers must be on top
 	bytesFreeRegister,
 	errorFreeRegister,
 
