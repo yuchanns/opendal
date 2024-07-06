@@ -1,6 +1,7 @@
 package opendal
 
 import (
+	"context"
 	"errors"
 	"unsafe"
 
@@ -59,7 +60,11 @@ func newOperatorOptions(libopendal uintptr) (opts operatorOptions, err error) {
 	return
 }
 
-func operatorOptionsSet(libopendal uintptr, opts *operatorOptions, key, value string) (err error) {
+const cFnOperatorOptionsSet = "opendal_operator_options_set"
+
+type operatorOptionsSet func(opts *operatorOptions, key, value string) error
+
+func operatorOptionsSetRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 3,
@@ -68,25 +73,30 @@ func operatorOptionsSet(libopendal uintptr, opts *operatorOptions, key, value st
 		&ffi.TypePointer,
 		&ffi.TypePointer,
 	); status != ffi.OK {
-		return errors.New(status.String())
+		err = errors.New(status.String())
+		return
 	}
-	sym, err := purego.Dlsym(libopendal, "opendal_operator_options_set")
+	fn, err := purego.Dlsym(libopendal, cFnOperatorOptionsSet)
 	if err != nil {
-		return err
+		return
 	}
-	var (
-		byteKey   *byte
-		byteValue *byte
-	)
-	byteKey, err = unix.BytePtrFromString(key)
-	if err != nil {
-		return err
+	var cFn operatorOptionsSet = func(opts *operatorOptions, key, value string) error {
+		var (
+			byteKey   *byte
+			byteValue *byte
+		)
+		byteKey, err = unix.BytePtrFromString(key)
+		if err != nil {
+			return err
+		}
+		byteValue, err = unix.BytePtrFromString(value)
+		if err != nil {
+			return err
+		}
+		ffi.Call(&cif, fn, nil, unsafe.Pointer(opts), unsafe.Pointer(&byteKey), unsafe.Pointer(&byteValue))
+		return nil
 	}
-	byteValue, err = unix.BytePtrFromString(value)
-	if err != nil {
-		return err
-	}
-	ffi.Call(&cif, sym, nil, unsafe.Pointer(opts), unsafe.Pointer(&byteKey), unsafe.Pointer(&byteValue))
+	newCtx = context.WithValue(ctx, cFnOperatorOptionsSet, cFn)
 	return
 }
 

@@ -1,6 +1,7 @@
 package opendal
 
 import (
+	"context"
 	"errors"
 	"unsafe"
 
@@ -10,12 +11,15 @@ import (
 )
 
 func (o *Operator) Read(path string) ([]byte, error) {
-	return o.read(o.inner, path)
+	read := getCFn[operatorRead](o.ctx, cFnOperatorRead)
+	return read(o.inner, path)
 }
 
 type operatorRead func(op *operator, path string) ([]byte, error)
 
-func operatorReadRegister(libopendal uintptr, op *Operator) (err error) {
+const cFnOperatorRead = "opendal_operator_read"
+
+func operatorReadRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 2,
@@ -26,15 +30,15 @@ func operatorReadRegister(libopendal uintptr, op *Operator) (err error) {
 		err = errors.New(status.String())
 		return
 	}
-	sym, err := purego.Dlsym(libopendal, "opendal_operator_read")
-	op.read = func(op *operator, path string) ([]byte, error) {
+	fn, err := purego.Dlsym(libopendal, cFnOperatorRead)
+	var cFn operatorRead = func(op *operator, path string) ([]byte, error) {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
 			return nil, err
 		}
 		var result resultRead
 		ffi.Call(
-			&cif, sym,
+			&cif, fn,
 			unsafe.Pointer(&result),
 			unsafe.Pointer(&op),
 			unsafe.Pointer(&bytePath),
@@ -44,5 +48,6 @@ func operatorReadRegister(libopendal uintptr, op *Operator) (err error) {
 		}
 		return result.data.data, nil
 	}
+	newCtx = context.WithValue(ctx, cFnOperatorRead, cFn)
 	return
 }

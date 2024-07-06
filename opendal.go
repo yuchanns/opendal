@@ -1,6 +1,7 @@
 package opendal
 
 import (
+	"context"
 	"runtime"
 
 	"github.com/ebitengine/purego"
@@ -9,15 +10,17 @@ import (
 type OperatorOptions map[string]string
 
 type Operator struct {
+	ctx context.Context
+
 	inner *operator
-
-	write operatorWrite
-
-	read operatorRead
 }
 
 func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error) {
 	libopendal, err := purego.Dlopen(scheme.Path(), purego.RTLD_LAZY|purego.RTLD_GLOBAL)
+	if err != nil {
+		return
+	}
+	ctx, err := registerCFn(libopendal)
 	if err != nil {
 		return
 	}
@@ -26,8 +29,9 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 		purego.Dlclose(libopendal)
 		return
 	}
+	setOptions := getCFn[operatorOptionsSet](ctx, cFnOperatorOptionsSet)
 	for key, value := range opts {
-		operatorOptionsSet(libopendal, &opt, key, value)
+		setOptions(&opt, key, value)
 	}
 
 	inner, err := newOperator(libopendal, scheme, &opt)
@@ -41,18 +45,12 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 
 	op = &Operator{
 		inner: inner,
+		ctx:   ctx,
 	}
 
 	runtime.SetFinalizer(op, func(_ *Operator) {
 		purego.Dlclose(libopendal)
 	})
-
-	for _, register := range operatorRegisters {
-		err = register(libopendal, op)
-		if err != nil {
-			return
-		}
-	}
 
 	return
 }

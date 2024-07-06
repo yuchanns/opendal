@@ -1,6 +1,7 @@
 package opendal
 
 import (
+	"context"
 	"errors"
 	"unsafe"
 
@@ -10,12 +11,15 @@ import (
 )
 
 func (o *Operator) Write(path string, data []byte) error {
-	return o.write(o.inner, path, data)
+	write := getCFn[operatorWrite](o.ctx, cFnOperatorWrite)
+	return write(o.inner, path, data)
 }
+
+const cFnOperatorWrite = "opendal_operator_write"
 
 type operatorWrite func(op *operator, path string, data []byte) error
 
-func operatorWriteRegister(libopendal uintptr, op *Operator) (err error) {
+func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 3,
@@ -27,11 +31,11 @@ func operatorWriteRegister(libopendal uintptr, op *Operator) (err error) {
 		err = errors.New(status.String())
 		return
 	}
-	sym, err := purego.Dlsym(libopendal, "opendal_operator_write")
+	sym, err := purego.Dlsym(libopendal, cFnOperatorWrite)
 	if err != nil {
 		return
 	}
-	op.write = func(op *operator, path string, data []byte) error {
+	var cFn operatorWrite = func(op *operator, path string, data []byte) error {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
 			return err
@@ -49,5 +53,6 @@ func operatorWriteRegister(libopendal uintptr, op *Operator) (err error) {
 		)
 		return e
 	}
+	newCtx = context.WithValue(ctx, cFnOperatorWrite, cFn)
 	return
 }
