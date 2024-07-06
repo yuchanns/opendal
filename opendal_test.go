@@ -29,6 +29,9 @@ func TestServicesAliyunDrive(t *testing.T) {
 	err = op.Write(path, data)
 	assert.Nil(err)
 
+	_, err = op.Stat("/not_exists")
+	assert.NotNil(err)
+	assert.Equal(int32(3), err.(*opendal.Error).Code())
 	// FIXME: incorrect metadata
 	/* metadata, err := op.Stat(path)
 	assert.Nil(err)
@@ -38,6 +41,9 @@ func TestServicesAliyunDrive(t *testing.T) {
 	t.Logf("%d", metadata.ContentLength())
 	assert.Equal(uint64(len(path)), metadata.ContentLength()) */
 
+	_, err = op.Read("/not_exists")
+	assert.NotNil(err)
+	assert.Equal(int32(3), err.(*opendal.Error).Code())
 	result, err := op.Read(path)
 	assert.Nil(err)
 	assert.Equal(data, result)
