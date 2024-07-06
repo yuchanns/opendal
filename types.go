@@ -1,8 +1,6 @@
 package opendal
 
 import (
-	"unsafe"
-
 	"github.com/jupiterrider/ffi"
 )
 
@@ -101,22 +99,6 @@ type opendalMetadata struct {
 type opendalBytes struct {
 	data *byte
 	len  uintptr
-}
-
-func toOpendalBytes(data []byte) opendalBytes {
-	var ptr *byte
-	l := len(data)
-	if l > 0 {
-		ptr = &data[0]
-	}
-	return opendalBytes{
-		data: ptr,
-		len:  uintptr(l),
-	}
-}
-
-func (b *opendalBytes) toByteSlice() []byte {
-	return unsafe.Slice(b.data, b.len)[:]
 }
 
 type opendalError struct {

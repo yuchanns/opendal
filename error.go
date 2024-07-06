@@ -18,7 +18,7 @@ func parseError(ctx context.Context, e *opendalError) error {
 	defer free(e)
 	return &Error{
 		code:    e.code,
-		message: string(e.message.toByteSlice()),
+		message: string(parseBytes(&e.message)),
 	}
 }
 

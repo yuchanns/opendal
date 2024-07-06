@@ -46,7 +46,8 @@ func operatorReadRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		if result.error != nil {
 			return nil, parseError(ctx, result.error)
 		}
-		return result.data.toByteSlice(), nil
+		defer freeBytes(ctx, result.data)
+		return parseBytes(result.data), nil
 	}
 	newCtx = context.WithValue(ctx, cFnOperatorRead, cFn)
 	return
