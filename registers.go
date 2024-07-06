@@ -29,5 +29,7 @@ var cFnRegisters = []cFnRegister{
 
 	metadataContentLengthRegister,
 	metadataIsFileRegister,
+	metadataIsDirRegister,
+	metadataLastModifiedMsRegister,
 	metadataFreeRegister,
 }

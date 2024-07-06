@@ -16,6 +16,9 @@ func (op *Operator) Stat(path string) (*Metadata, error) {
 	if err != nil {
 		return nil, err
 	}
+	if result.error != nil {
+		return nil, result.error
+	}
 	return newMetadata(op.ctx, result.meta), nil
 }
 
@@ -27,7 +30,7 @@ func operatorStatRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 2,
-		&typeResultRead,
+		&typeResultStat,
 		&ffi.TypePointer,
 		&ffi.TypePointer,
 	); status != ffi.OK {
