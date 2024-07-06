@@ -12,17 +12,14 @@ import (
 
 func (op *Operator) Stat(path string) (*Metadata, error) {
 	stat := getCFn[operatorStat](op.ctx, cFnOperatorStat)
-	result, err := stat(op.inner, path)
+	meta, err := stat(op.inner, path)
 	if err != nil {
 		return nil, err
 	}
-	if result.error != nil {
-		return nil, result.error.parse()
-	}
-	return newMetadata(op.ctx, result.meta), nil
+	return newMetadata(op.ctx, meta), nil
 }
 
-type operatorStat func(op *operator, path string) (*resultStat, error)
+type operatorStat func(op *operator, path string) (*opendalMetadata, error)
 
 const cFnOperatorStat = "opendal_operator_stat"
 
@@ -38,7 +35,7 @@ func operatorStatRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnOperatorRead)
-	var cFn operatorStat = func(op *operator, path string) (*resultStat, error) {
+	var cFn operatorStat = func(op *operator, path string) (*opendalMetadata, error) {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
 			return nil, err
@@ -51,9 +48,9 @@ func operatorStatRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 			unsafe.Pointer(&bytePath),
 		)
 		if result.error != nil {
-			return nil, result.error.parse()
+			return nil, parseError(ctx, result.error)
 		}
-		return &result, nil
+		return result.meta, nil
 	}
 	newCtx = context.WithValue(ctx, cFnOperatorStat, cFn)
 	return

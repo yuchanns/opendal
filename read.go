@@ -44,7 +44,7 @@ func operatorReadRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 			unsafe.Pointer(&bytePath),
 		)
 		if result.error != nil {
-			return nil, result.error.parse()
+			return nil, parseError(ctx, result.error)
 		}
 		return result.data.toByteSlice(), nil
 	}

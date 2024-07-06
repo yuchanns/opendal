@@ -1,7 +1,6 @@
 package opendal
 
 import (
-	"fmt"
 	"unsafe"
 
 	"github.com/jupiterrider/ffi"
@@ -54,7 +53,7 @@ var (
 	typeResultStat = ffi.Type{
 		Type: ffi.Struct,
 		Elements: &[]*ffi.Type{
-			&typeMetadataPointer,
+			&ffi.TypePointer,
 			&ffi.TypePointer,
 			nil,
 		}[0],
@@ -91,17 +90,17 @@ type resultRead struct {
 }
 
 type resultStat struct {
-	meta  *meta
+	meta  *opendalMetadata
 	error *opendalError
 }
 
-type meta struct {
+type opendalMetadata struct {
 	inner uintptr
 }
 
 type opendalBytes struct {
 	data *byte
-	len  uint64
+	len  uintptr
 }
 
 func toOpendalBytes(data []byte) opendalBytes {
@@ -112,42 +111,15 @@ func toOpendalBytes(data []byte) opendalBytes {
 	}
 	return opendalBytes{
 		data: ptr,
-		len:  uint64(l),
+		len:  uintptr(l),
 	}
 }
 
 func (b *opendalBytes) toByteSlice() []byte {
-	return unsafe.Slice(b.data, b.len)
+	return unsafe.Slice(b.data, b.len)[:]
 }
 
 type opendalError struct {
 	code    int32
 	message opendalBytes
-}
-
-func (e *opendalError) parse() error {
-	if e == nil {
-		return nil
-	}
-	return &Error{
-		code:    e.code,
-		message: string(e.message.toByteSlice()),
-	}
-}
-
-type Error struct {
-	code    int32
-	message string
-}
-
-func (e *Error) Error() string {
-	return fmt.Sprintf("%d %s", e.code, e.message)
-}
-
-func (e *Error) Code() int32 {
-	return e.code
-}
-
-func (e *Error) Message() string {
-	return e.message
 }

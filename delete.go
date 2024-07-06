@@ -43,7 +43,7 @@ func operatorDeleteRegister(ctx context.Context, libopendal uintptr) (newCtx con
 			unsafe.Pointer(&op),
 			unsafe.Pointer(&bytePath),
 		)
-		return e.parse()
+		return parseError(ctx, e)
 	}
 	newCtx = context.WithValue(ctx, cFnOperatorDelete, cFn)
 	return

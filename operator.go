@@ -10,7 +10,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func newOperator(libopendal uintptr, scheme Schemer, opts *operatorOptions) (op *operator, err error) {
+func newOperator(ctx context.Context, libopendal uintptr, scheme Schemer, opts *operatorOptions) (op *operator, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 2,
@@ -32,7 +32,7 @@ func newOperator(libopendal uintptr, scheme Schemer, opts *operatorOptions) (op 
 	var result resultOperatorNew
 	ffi.Call(&cif, sym, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(opts))
 	if result.error != nil {
-		err = result.error.parse()
+		err = parseError(ctx, result.error)
 		return
 	}
 	op = result.op

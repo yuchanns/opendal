@@ -52,7 +52,7 @@ func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 			unsafe.Pointer(&bytePath),
 			unsafe.Pointer(&bytes),
 		)
-		return e.parse()
+		return parseError(ctx, e)
 	}
 	newCtx = context.WithValue(ctx, cFnOperatorWrite, cFn)
 	return

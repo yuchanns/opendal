@@ -22,6 +22,8 @@ func getCFn[T any](ctx context.Context, key string) T {
 var cFnRegisters = []cFnRegister{
 	operatorOptionsSetRegister,
 
+	errorFreeRegister,
+
 	operatorReadRegister,
 	operatorWriteRegister,
 	operatorDeleteRegister,

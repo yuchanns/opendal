@@ -34,7 +34,7 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 		setOptions(&opt, key, value)
 	}
 
-	inner, err := newOperator(libopendal, scheme, &opt)
+	inner, err := newOperator(ctx, libopendal, scheme, &opt)
 	if err != nil {
 		operatorOptionsFree(libopendal, &opt)
 		purego.Dlclose(libopendal)
