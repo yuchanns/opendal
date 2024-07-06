@@ -23,8 +23,11 @@ var cFnRegisters = []cFnRegister{
 	operatorOptionsSetRegister,
 
 	operatorReadRegister,
-
 	operatorWriteRegister,
-
 	operatorDeleteRegister,
+	operatorStatRegister,
+
+	metadataContentLengthRegister,
+	metadataIsFileRegister,
+	metadataFreeRegister,
 }

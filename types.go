@@ -6,6 +6,13 @@ import (
 	"github.com/jupiterrider/ffi"
 )
 
+func newTypePointer(elems **ffi.Type) ffi.Type {
+	return ffi.Type{
+		Type:     ffi.Pointer,
+		Elements: elems,
+	}
+}
+
 var (
 	typeError = ffi.Type{
 		Type: ffi.Struct,
@@ -42,6 +49,30 @@ var (
 			nil,
 		}[0],
 	}
+
+	typeResultStat = ffi.Type{
+		Type: ffi.Struct,
+		Elements: &[]*ffi.Type{
+			&typeMetadataPointer,
+			&ffi.TypePointer,
+			nil,
+		}[0],
+	}
+
+	typeMetadata = ffi.Type{
+		Type: ffi.Struct,
+		Elements: &[]*ffi.Type{
+			&ffi.TypePointer,
+			nil,
+		}[0],
+	}
+
+	typeMetadataPointer = newTypePointer(
+		&[]*ffi.Type{
+			&typeMetadata,
+			nil,
+		}[0],
+	)
 )
 
 type resultOperatorNew struct {
@@ -56,6 +87,15 @@ type operator struct {
 type resultRead struct {
 	data  *bytes
 	error *Error
+}
+
+type resultStat struct {
+	meta  *meta
+	error *Error
+}
+
+type meta struct {
+	inner uintptr
 }
 
 type bytes struct {

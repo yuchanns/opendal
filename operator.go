@@ -39,6 +39,24 @@ func newOperator(libopendal uintptr, scheme Schemer, opts *operatorOptions) (op 
 	return
 }
 
+func operatorFree(libopendal uintptr, op *operator) (err error) {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(
+		&cif, ffi.DefaultAbi, 1,
+		&ffi.TypeVoid,
+		&ffi.TypePointer,
+	); status != ffi.OK {
+		err = errors.New(status.String())
+		return
+	}
+	sym, err := purego.Dlsym(libopendal, "opendal_operator_free")
+	if err != nil {
+		return
+	}
+	ffi.Call(&cif, sym, nil, unsafe.Pointer(&op))
+	return
+}
+
 type operatorOptions struct {
 	inner uintptr
 }

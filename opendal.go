@@ -49,6 +49,7 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 	}
 
 	runtime.SetFinalizer(op, func(_ *Operator) {
+		operatorFree(libopendal, inner)
 		purego.Dlclose(libopendal)
 	})
 
