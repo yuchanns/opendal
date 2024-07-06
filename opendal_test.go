@@ -32,4 +32,7 @@ func TestServicesAliyunDrive(t *testing.T) {
 	result, err := op.Read(path)
 	assert.Nil(err)
 	assert.Equal(data, result)
+
+	err = op.Delete(path)
+	assert.Nil(err)
 }

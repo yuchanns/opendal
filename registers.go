@@ -25,4 +25,6 @@ var cFnRegisters = []cFnRegister{
 	operatorReadRegister,
 
 	operatorWriteRegister,
+
+	operatorDeleteRegister,
 }

@@ -31,7 +31,7 @@ func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 		err = errors.New(status.String())
 		return
 	}
-	sym, err := purego.Dlsym(libopendal, cFnOperatorWrite)
+	fn, err := purego.Dlsym(libopendal, cFnOperatorWrite)
 	if err != nil {
 		return
 	}
@@ -45,7 +45,7 @@ func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 		}
 		var e *Error
 		ffi.Call(
-			&cif, sym,
+			&cif, fn,
 			unsafe.Pointer(&e),
 			unsafe.Pointer(&op),
 			unsafe.Pointer(&bytePath),
