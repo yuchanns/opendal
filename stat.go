@@ -19,7 +19,7 @@ func (op *Operator) Stat(path string) (*Metadata, error) {
 	return newMetadata(op.ctx, meta), nil
 }
 
-type operatorStat func(op *operator, path string) (*opendalMetadata, error)
+type operatorStat func(op *opendalOperator, path string) (*opendalMetadata, error)
 
 const cFnOperatorStat = "opendal_operator_stat"
 
@@ -38,7 +38,7 @@ func operatorStatRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 	if err != nil {
 		return
 	}
-	var cFn operatorStat = func(op *operator, path string) (*opendalMetadata, error) {
+	var cFn operatorStat = func(op *opendalOperator, path string) (*opendalMetadata, error) {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
 			return nil, err

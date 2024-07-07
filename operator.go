@@ -10,7 +10,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func newOperator(ctx context.Context, libopendal uintptr, scheme Schemer, opts *operatorOptions) (op *operator, err error) {
+func newOperator(ctx context.Context, libopendal uintptr, scheme Schemer, opts *operatorOptions) (op *opendalOperator, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 2,
@@ -39,7 +39,7 @@ func newOperator(ctx context.Context, libopendal uintptr, scheme Schemer, opts *
 	return
 }
 
-func operatorFree(libopendal uintptr, op *operator) (err error) {
+func operatorFree(libopendal uintptr, op *opendalOperator) (err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,

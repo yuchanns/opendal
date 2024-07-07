@@ -74,11 +74,11 @@ var (
 )
 
 type resultOperatorNew struct {
-	op    *operator
+	op    *opendalOperator
 	error *opendalError
 }
 
-type operator struct {
+type opendalOperator struct {
 	ptr uintptr
 }
 

@@ -15,7 +15,7 @@ func (o *Operator) Read(path string) ([]byte, error) {
 	return read(o.inner, path)
 }
 
-type operatorRead func(op *operator, path string) ([]byte, error)
+type operatorRead func(op *opendalOperator, path string) ([]byte, error)
 
 const cFnOperatorRead = "opendal_operator_read"
 
@@ -34,7 +34,7 @@ func operatorReadRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 	if err != nil {
 		return
 	}
-	var cFn operatorRead = func(op *operator, path string) ([]byte, error) {
+	var cFn operatorRead = func(op *opendalOperator, path string) ([]byte, error) {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
 			return nil, err

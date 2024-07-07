@@ -39,7 +39,7 @@ func TestServicesAliyunDrive(t *testing.T) {
 	assert.True(metadata.IsFile())
 	t.Logf("%s", metadata.LastModified())
 	t.Logf("%d", metadata.ContentLength())
-	assert.Equal(uint64(len(path)), metadata.ContentLength()) */
+	assert.Equal(uint64(len(data)), metadata.ContentLength()) */
 
 	_, err = op.Read("/not_exists")
 	assert.NotNil(err)

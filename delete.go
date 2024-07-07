@@ -15,7 +15,7 @@ func (o *Operator) Delete(path string) error {
 	return delete(o.inner, path)
 }
 
-type operatorDelete func(op *operator, path string) error
+type operatorDelete func(op *opendalOperator, path string) error
 
 const cFnOperatorDelete = "opendal_operator_delete"
 
@@ -34,7 +34,7 @@ func operatorDeleteRegister(ctx context.Context, libopendal uintptr) (newCtx con
 	if err != nil {
 		return
 	}
-	var cFn operatorDelete = func(op *operator, path string) error {
+	var cFn operatorDelete = func(op *opendalOperator, path string) error {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
 			return err

@@ -12,7 +12,7 @@ type OperatorOptions map[string]string
 type Operator struct {
 	ctx context.Context
 
-	inner *operator
+	inner *opendalOperator
 }
 
 func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error) {

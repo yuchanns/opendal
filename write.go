@@ -17,7 +17,7 @@ func (o *Operator) Write(path string, data []byte) error {
 
 const cFnOperatorWrite = "opendal_operator_write"
 
-type operatorWrite func(op *operator, path string, data []byte) error
+type operatorWrite func(op *opendalOperator, path string, data []byte) error
 
 func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
@@ -35,7 +35,7 @@ func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 	if err != nil {
 		return
 	}
-	var cFn operatorWrite = func(op *operator, path string, data []byte) error {
+	var cFn operatorWrite = func(op *opendalOperator, path string, data []byte) error {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
 			return err
