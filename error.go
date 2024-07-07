@@ -54,6 +54,9 @@ func errorFreeRegister(ctx context.Context, libopendal uintptr) (newCtx context.
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnErrorFree)
+	if err != nil {
+		return
+	}
 	var cFn errorFree = func(e *opendalError) {
 		ffi.Call(
 			&cif, fn,

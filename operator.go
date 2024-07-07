@@ -20,7 +20,7 @@ func newOperator(ctx context.Context, libopendal uintptr, scheme Schemer, opts *
 	); status != ffi.OK {
 		return nil, errors.New(status.String())
 	}
-	sym, err := purego.Dlsym(libopendal, "opendal_operator_new")
+	fn, err := purego.Dlsym(libopendal, "opendal_operator_new")
 	if err != nil {
 		return
 	}
@@ -30,7 +30,7 @@ func newOperator(ctx context.Context, libopendal uintptr, scheme Schemer, opts *
 		return
 	}
 	var result resultOperatorNew
-	ffi.Call(&cif, sym, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(opts))
+	ffi.Call(&cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(opts))
 	if result.error != nil {
 		err = parseError(ctx, result.error)
 		return
@@ -49,11 +49,11 @@ func operatorFree(libopendal uintptr, op *operator) (err error) {
 		err = errors.New(status.String())
 		return
 	}
-	sym, err := purego.Dlsym(libopendal, "opendal_operator_free")
+	fn, err := purego.Dlsym(libopendal, "opendal_operator_free")
 	if err != nil {
 		return
 	}
-	ffi.Call(&cif, sym, nil, unsafe.Pointer(&op))
+	ffi.Call(&cif, fn, nil, unsafe.Pointer(&op))
 	return
 }
 
@@ -70,11 +70,11 @@ func newOperatorOptions(libopendal uintptr) (opts operatorOptions, err error) {
 		err = errors.New(status.String())
 		return
 	}
-	sym, err := purego.Dlsym(libopendal, "opendal_operator_options_new")
+	fn, err := purego.Dlsym(libopendal, "opendal_operator_options_new")
 	if err != nil {
 		return
 	}
-	ffi.Call(&cif, sym, unsafe.Pointer(&opts))
+	ffi.Call(&cif, fn, unsafe.Pointer(&opts))
 	return
 }
 
@@ -127,10 +127,10 @@ func operatorOptionsFree(libopendal uintptr, opts *operatorOptions) (err error) 
 	); status != ffi.OK {
 		return errors.New(status.String())
 	}
-	sym, err := purego.Dlsym(libopendal, "opendal_operator_options_free")
+	fn, err := purego.Dlsym(libopendal, "opendal_operator_options_free")
 	if err != nil {
 		return err
 	}
-	ffi.Call(&cif, sym, nil, unsafe.Pointer(opts))
+	ffi.Call(&cif, fn, nil, unsafe.Pointer(opts))
 	return
 }

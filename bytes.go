@@ -53,6 +53,9 @@ func bytesFreeRegister(ctx context.Context, libopendal uintptr) (newCtx context.
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnBytesFree)
+	if err != nil {
+		return
+	}
 	var cFn bytesFree = func(b *opendalBytes) {
 		ffi.Call(
 			&cif, fn,

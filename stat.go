@@ -35,6 +35,9 @@ func operatorStatRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnOperatorRead)
+	if err != nil {
+		return
+	}
 	var cFn operatorStat = func(op *operator, path string) (*opendalMetadata, error) {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {

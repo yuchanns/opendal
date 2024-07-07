@@ -65,6 +65,9 @@ func metadataContentLengthRegister(ctx context.Context, libopendal uintptr) (new
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnMetadataContentLength)
+	if err != nil {
+		return
+	}
 	var cFn metadataContentLength = func(m *opendalMetadata) uint64 {
 		var length uint64
 		ffi.Call(
@@ -93,6 +96,9 @@ func metadataIsFileRegister(ctx context.Context, libopendal uintptr) (newCtx con
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnMetadataIsFile)
+	if err != nil {
+		return
+	}
 	var cFn metadataIsFile = func(m *opendalMetadata) bool {
 		var result uint32
 		ffi.Call(
@@ -121,6 +127,9 @@ func metadataIsDirRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnMetadataIsDir)
+	if err != nil {
+		return
+	}
 	var cFn metadataIsDir = func(m *opendalMetadata) bool {
 		var result uint32
 		ffi.Call(
@@ -149,6 +158,9 @@ func metadataLastModifiedMsRegister(ctx context.Context, libopendal uintptr) (ne
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnMetadataLastModifiedMs)
+	if err != nil {
+		return
+	}
 	var cFn metadataLastModifiedMs = func(m *opendalMetadata) int64 {
 		var result int64
 		ffi.Call(
@@ -177,6 +189,9 @@ func metadataFreeRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnMetadataFree)
+	if err != nil {
+		return
+	}
 	var cFn metadataFree = func(m *opendalMetadata) {
 		ffi.Call(
 			&cif, fn,

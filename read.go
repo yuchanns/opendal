@@ -31,6 +31,9 @@ func operatorReadRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnOperatorRead)
+	if err != nil {
+		return
+	}
 	var cFn operatorRead = func(op *operator, path string) ([]byte, error) {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {

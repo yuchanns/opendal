@@ -31,6 +31,9 @@ func operatorDeleteRegister(ctx context.Context, libopendal uintptr) (newCtx con
 		return
 	}
 	fn, err := purego.Dlsym(libopendal, cFnOperatorDelete)
+	if err != nil {
+		return
+	}
 	var cFn operatorDelete = func(op *operator, path string) error {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
