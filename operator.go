@@ -30,7 +30,7 @@ func newOperator(ctx context.Context, libopendal uintptr, scheme Schemer, opts *
 		return
 	}
 	var result resultOperatorNew
-	ffi.Call(&cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(opts))
+	ffi.Call(&cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(&opts))
 	if result.error != nil {
 		err = parseError(ctx, result.error)
 		return
@@ -61,7 +61,7 @@ type operatorOptions struct {
 	inner uintptr
 }
 
-func newOperatorOptions(libopendal uintptr) (opts operatorOptions, err error) {
+func newOperatorOptions(libopendal uintptr) (opts *operatorOptions, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 0,
@@ -111,7 +111,7 @@ func operatorOptionsSetRegister(ctx context.Context, libopendal uintptr) (newCtx
 		if err != nil {
 			return err
 		}
-		ffi.Call(&cif, fn, nil, unsafe.Pointer(opts), unsafe.Pointer(&byteKey), unsafe.Pointer(&byteValue))
+		ffi.Call(&cif, fn, nil, unsafe.Pointer(&opts), unsafe.Pointer(&byteKey), unsafe.Pointer(&byteValue))
 		return nil
 	}
 	newCtx = context.WithValue(ctx, cFnOperatorOptionsSet, cFn)
@@ -131,6 +131,6 @@ func operatorOptionsFree(libopendal uintptr, opts *operatorOptions) (err error) 
 	if err != nil {
 		return err
 	}
-	ffi.Call(&cif, fn, nil, unsafe.Pointer(opts))
+	ffi.Call(&cif, fn, nil, unsafe.Pointer(&opts))
 	return
 }

@@ -14,7 +14,7 @@ func TestServicesAliyunDrive(t *testing.T) {
 	assert := assert.New(t)
 
 	path := "/test/path"
-	data := []byte("Hello OpenDAL-go without CGO!")
+	data := []byte("Hello, World!")
 
 	opts := opendal.OperatorOptions{
 		"client_id":     os.Getenv("OPENDAL_ALIYUN_DRIVE_CLIENT_ID"),
@@ -32,14 +32,13 @@ func TestServicesAliyunDrive(t *testing.T) {
 	_, err = op.Stat("/not_exists")
 	assert.NotNil(err)
 	assert.Equal(int32(3), err.(*opendal.Error).Code())
-	// FIXME: incorrect metadata
-	/* metadata, err := op.Stat(path)
+	meta, err := op.Stat(path)
 	assert.Nil(err)
-	assert.False(metadata.IsDir())
-	assert.True(metadata.IsFile())
-	t.Logf("%s", metadata.LastModified())
-	t.Logf("%d", metadata.ContentLength())
-	assert.Equal(uint64(len(data)), metadata.ContentLength()) */
+	assert.Equal(uint64(len(data)), meta.ContentLength())
+	// FIXME: incorrect timestamp and path type
+	/* assert.False(meta.IsDir())
+	assert.True(meta.IsFile())
+	t.Logf("%s", meta.LastModified()) */
 
 	_, err = op.Read("/not_exists")
 	assert.NotNil(err)

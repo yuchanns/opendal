@@ -31,17 +31,17 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 	}
 	setOptions := getCFn[operatorOptionsSet](ctx, cFnOperatorOptionsSet)
 	for key, value := range opts {
-		setOptions(&opt, key, value)
+		setOptions(opt, key, value)
 	}
 
-	inner, err := newOperator(ctx, libopendal, scheme, &opt)
+	inner, err := newOperator(ctx, libopendal, scheme, opt)
 	if err != nil {
-		operatorOptionsFree(libopendal, &opt)
+		operatorOptionsFree(libopendal, opt)
 		purego.Dlclose(libopendal)
 		return
 	}
 
-	defer operatorOptionsFree(libopendal, &opt)
+	defer operatorOptionsFree(libopendal, opt)
 
 	op = &Operator{
 		inner: inner,

@@ -53,7 +53,7 @@ func operatorStatRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		if result.error != nil {
 			return nil, parseError(ctx, result.error)
 		}
-		return result.meta, nil
+		return (*opendalMetadata)(unsafe.Pointer(uintptr(unsafe.Pointer(&result)) + unsafe.Offsetof(result.meta))), nil
 	}
 	newCtx = context.WithValue(ctx, cFnOperatorStat, cFn)
 	return
