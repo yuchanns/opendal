@@ -26,6 +26,7 @@ var cFnRegisters = []cFnRegister{
 
 	operatorOptionsSetRegister,
 
+	operatorCreateDirRegister,
 	operatorReadRegister,
 	operatorWriteRegister,
 	operatorDeleteRegister,

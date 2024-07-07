@@ -3,6 +3,7 @@ package opendal_test
 import (
 	"opendal"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,6 +14,7 @@ func TestServicesAliyunDrive(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 
+	dir := "/test/dir/"
 	path := "/test/path"
 	data := []byte("Hello, World!")
 
@@ -26,16 +28,25 @@ func TestServicesAliyunDrive(t *testing.T) {
 
 	op, err := opendal.NewOperator(aliyun_drive.Scheme, opts)
 
+	err = op.CreateDir(dir)
+	assert.Nil(err)
+
 	err = op.Write(path, data)
 	assert.Nil(err)
 
 	_, err = op.Stat("/not_exists")
 	assert.NotNil(err)
 	assert.Equal(int32(3), err.(*opendal.Error).Code())
-	meta, err := op.Stat(path)
+	meta, err := op.Stat(strings.TrimRight(dir, "/"))
+	assert.Nil(err)
+	// FIXME: incorrect metadata
+	/* assert.True(meta.IsDir())
+	assert.False(meta.IsFile()) */
+
+	meta, err = op.Stat(path)
 	assert.Nil(err)
 	assert.Equal(uint64(len(data)), meta.ContentLength())
-	// FIXME: incorrect timestamp and path type
+	// FIXME: incorrect metadata
 	/* assert.False(meta.IsDir())
 	assert.True(meta.IsFile())
 	t.Logf("%s", meta.LastModified()) */
@@ -47,6 +58,7 @@ func TestServicesAliyunDrive(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(data, result)
 
+	err = op.Delete(strings.TrimRight(dir, "/"))
 	err = op.Delete(path)
 	assert.Nil(err)
 }

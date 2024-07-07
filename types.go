@@ -56,21 +56,6 @@ var (
 			nil,
 		}[0],
 	}
-
-	typeMetadata = ffi.Type{
-		Type: ffi.Struct,
-		Elements: &[]*ffi.Type{
-			&ffi.TypePointer,
-			nil,
-		}[0],
-	}
-
-	typeMetadataPointer = newTypePointer(
-		&[]*ffi.Type{
-			&typeMetadata,
-			nil,
-		}[0],
-	)
 )
 
 type resultOperatorNew struct {
