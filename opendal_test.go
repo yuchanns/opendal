@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 	"github.com/yuchanns/opendal-go-services/aliyun_drive"
 )
@@ -15,7 +16,7 @@ func TestBehavior(t *testing.T) {
 	suite.Run(t, new(BehaviorTestSuite))
 }
 
-var schemeMap = map[string]opendal.Schemer{
+var schemes = map[string]opendal.Schemer{
 	"aliyun_drive": aliyun_drive.Scheme,
 }
 
@@ -26,13 +27,11 @@ type BehaviorTestSuite struct {
 }
 
 func (s *BehaviorTestSuite) SetupSuite() {
-	testScheme := os.Getenv("OPENDAL_TEST")
-	scheme, ok := schemeMap[testScheme]
-	if !ok {
-		panic(fmt.Sprintf("Unsupported scheme: %s", testScheme))
-	}
+	test := os.Getenv("OPENDAL_TEST")
+	scheme, ok := schemes[test]
+	s.Require().True(ok, "unsupported scheme: %s", test)
 
-	prefix := fmt.Sprintf("OPENDAL_%s_", strings.ToUpper(testScheme))
+	prefix := fmt.Sprintf("OPENDAL_%s_", strings.ToUpper(scheme.Scheme()))
 	opts := opendal.OperatorOptions{}
 	for _, env := range os.Environ() {
 		pair := strings.SplitN(env, "=", 2)
@@ -56,9 +55,10 @@ func (s *BehaviorTestSuite) TestStat() {
 	assert := s.Require()
 	op := s.op
 
-	dir := "/test/dir/"
-	path := "/test/path"
-	data := []byte("Hello, World!")
+	uuid := uuid.NewString()
+	dir := fmt.Sprintf("%s/dir/", uuid)
+	path := fmt.Sprintf("%s/path", dir)
+	data := []byte(uuid)
 
 	err := op.CreateDir(dir)
 	assert.Nil(err)
@@ -81,14 +81,20 @@ func (s *BehaviorTestSuite) TestStat() {
 	assert.False(meta.IsDir())
 	assert.True(meta.IsFile())
 	assert.False(meta.LastModified().IsZero())
+
+	err = op.Delete(path)
+	assert.Nil(err)
+	err = op.Delete(dir)
+	assert.Nil(err)
 }
 
 func (s *BehaviorTestSuite) TestWrite() {
 	assert := s.Require()
 	op := s.op
 
-	path := "/test/path"
-	data := []byte("Hello, World!")
+	uuid := uuid.NewString()
+	path := fmt.Sprintf("%s/path", uuid)
+	data := []byte(uuid)
 
 	err := op.Write(path, data)
 	assert.Nil(err)

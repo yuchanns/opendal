@@ -12,15 +12,6 @@ func newTypePointer(elems **ffi.Type) ffi.Type {
 }
 
 var (
-	typeError = ffi.Type{
-		Type: ffi.Struct,
-		Elements: &[]*ffi.Type{
-			&ffi.TypeSint32,
-			&typeBytes,
-			nil,
-		}[0],
-	}
-
 	typeResultOperatorNew = ffi.Type{
 		Type: ffi.Struct,
 		Elements: &[]*ffi.Type{

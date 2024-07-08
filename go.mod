@@ -4,6 +4,7 @@ go 1.22.4
 
 require (
 	github.com/ebitengine/purego v0.7.1
+	github.com/google/uuid v1.6.0
 	github.com/jupiterrider/ffi v0.1.0-beta.9
 	github.com/stretchr/testify v1.9.0
 	github.com/yuchanns/opendal-go-services v0.0.0-20240704131843-72a35ce1080d
