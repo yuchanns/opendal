@@ -23,29 +23,29 @@ func newMetadata(ctx context.Context, inner *opendalMetadata) *Metadata {
 		inner: inner,
 	}
 	runtime.SetFinalizer(m, func(_ *Metadata) {
-		free := getCFn[metadataFree](ctx, cFnMetadataFree)
+		free := getCFunc[metaFree](ctx, symMetadataFree)
 		free(inner)
 	})
 	return m
 }
 
 func (m *Metadata) ContentLength() uint64 {
-	length := getCFn[metadataContentLength](m.ctx, cFnMetadataContentLength)
+	length := getCFunc[metaContentLength](m.ctx, symMetadataContentLength)
 	return length(m.inner)
 }
 
 func (m *Metadata) IsFile() bool {
-	isFile := getCFn[metadataIsFile](m.ctx, cFnMetadataIsFile)
+	isFile := getCFunc[metaIsFile](m.ctx, symMetadataIsFile)
 	return isFile(m.inner)
 }
 
 func (m *Metadata) IsDir() bool {
-	isDir := getCFn[metadataIsDir](m.ctx, cFnMetadataIsDir)
+	isDir := getCFunc[metaIsDir](m.ctx, symMetadataIsDir)
 	return isDir(m.inner)
 }
 
 func (m *Metadata) LastModified() time.Time {
-	lastModifiedMs := getCFn[metadataLastModifiedMs](m.ctx, cFnMetadataLastModifiedMs)
+	lastModifiedMs := getCFunc[metaLastModified](m.ctx, symMetadataLastModified)
 	ms := lastModifiedMs(m.inner)
 	if ms == -1 {
 		var zeroTime time.Time
@@ -54,11 +54,11 @@ func (m *Metadata) LastModified() time.Time {
 	return time.UnixMilli(ms)
 }
 
-type metadataContentLength func(m *opendalMetadata) uint64
+type metaContentLength func(m *opendalMetadata) uint64
 
-const cFnMetadataContentLength = "opendal_metadata_content_length"
+const symMetadataContentLength = "opendal_metadata_content_length"
 
-func metadataContentLengthRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withMetaContentLength(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,
@@ -68,11 +68,11 @@ func metadataContentLengthRegister(ctx context.Context, libopendal uintptr) (new
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnMetadataContentLength)
+	fn, err := purego.Dlsym(libopendal, symMetadataContentLength)
 	if err != nil {
 		return
 	}
-	var cFn metadataContentLength = func(m *opendalMetadata) uint64 {
+	var cFn metaContentLength = func(m *opendalMetadata) uint64 {
 		var length uint64
 		ffi.Call(
 			&cif, fn,
@@ -81,15 +81,15 @@ func metadataContentLengthRegister(ctx context.Context, libopendal uintptr) (new
 		)
 		return length
 	}
-	newCtx = context.WithValue(ctx, cFnMetadataContentLength, cFn)
+	newCtx = context.WithValue(ctx, symMetadataContentLength, cFn)
 	return
 }
 
-type metadataIsFile func(m *opendalMetadata) bool
+type metaIsFile func(m *opendalMetadata) bool
 
-const cFnMetadataIsFile = "opendal_metadata_is_file"
+const symMetadataIsFile = "opendal_metadata_is_file"
 
-func metadataIsFileRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withMetaIsFile(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,
@@ -99,11 +99,11 @@ func metadataIsFileRegister(ctx context.Context, libopendal uintptr) (newCtx con
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnMetadataIsFile)
+	fn, err := purego.Dlsym(libopendal, symMetadataIsFile)
 	if err != nil {
 		return
 	}
-	var cFn metadataIsFile = func(m *opendalMetadata) bool {
+	var cFn metaIsFile = func(m *opendalMetadata) bool {
 		var result uint32
 		ffi.Call(
 			&cif, fn,
@@ -112,15 +112,15 @@ func metadataIsFileRegister(ctx context.Context, libopendal uintptr) (newCtx con
 		)
 		return result == 1
 	}
-	newCtx = context.WithValue(ctx, cFnMetadataIsFile, cFn)
+	newCtx = context.WithValue(ctx, symMetadataIsFile, cFn)
 	return
 }
 
-type metadataIsDir func(m *opendalMetadata) bool
+type metaIsDir func(m *opendalMetadata) bool
 
-const cFnMetadataIsDir = "opendal_metadata_is_dir"
+const symMetadataIsDir = "opendal_metadata_is_dir"
 
-func metadataIsDirRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withMetaIsDir(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,
@@ -130,11 +130,11 @@ func metadataIsDirRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnMetadataIsDir)
+	fn, err := purego.Dlsym(libopendal, symMetadataIsDir)
 	if err != nil {
 		return
 	}
-	var cFn metadataIsDir = func(m *opendalMetadata) bool {
+	var cFn metaIsDir = func(m *opendalMetadata) bool {
 		var result uint32
 		ffi.Call(
 			&cif, fn,
@@ -143,15 +143,15 @@ func metadataIsDirRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 		)
 		return result == 1
 	}
-	newCtx = context.WithValue(ctx, cFnMetadataIsDir, cFn)
+	newCtx = context.WithValue(ctx, symMetadataIsDir, cFn)
 	return
 }
 
-type metadataLastModifiedMs func(m *opendalMetadata) int64
+type metaLastModified func(m *opendalMetadata) int64
 
-const cFnMetadataLastModifiedMs = "opendal_metadata_last_modified_ms"
+const symMetadataLastModified = "opendal_metadata_last_modified_ms"
 
-func metadataLastModifiedMsRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withMetaLastModified(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,
@@ -161,11 +161,11 @@ func metadataLastModifiedMsRegister(ctx context.Context, libopendal uintptr) (ne
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnMetadataLastModifiedMs)
+	fn, err := purego.Dlsym(libopendal, symMetadataLastModified)
 	if err != nil {
 		return
 	}
-	var cFn metadataLastModifiedMs = func(m *opendalMetadata) int64 {
+	var cFn metaLastModified = func(m *opendalMetadata) int64 {
 		var result int64
 		ffi.Call(
 			&cif, fn,
@@ -174,15 +174,15 @@ func metadataLastModifiedMsRegister(ctx context.Context, libopendal uintptr) (ne
 		)
 		return result
 	}
-	newCtx = context.WithValue(ctx, cFnMetadataLastModifiedMs, cFn)
+	newCtx = context.WithValue(ctx, symMetadataLastModified, cFn)
 	return
 }
 
-type metadataFree func(m *opendalMetadata)
+type metaFree func(m *opendalMetadata)
 
-const cFnMetadataFree = "opendal_metadata_free"
+const symMetadataFree = "opendal_metadata_free"
 
-func metadataFreeRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withMetaFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,
@@ -192,17 +192,17 @@ func metadataFreeRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnMetadataFree)
+	fn, err := purego.Dlsym(libopendal, symMetadataFree)
 	if err != nil {
 		return
 	}
-	var cFn metadataFree = func(m *opendalMetadata) {
+	var cFn metaFree = func(m *opendalMetadata) {
 		ffi.Call(
 			&cif, fn,
 			nil,
 			unsafe.Pointer(&m),
 		)
 	}
-	newCtx = context.WithValue(ctx, cFnMetadataFree, cFn)
+	newCtx = context.WithValue(ctx, symMetadataFree, cFn)
 	return
 }

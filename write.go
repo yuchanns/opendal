@@ -11,20 +11,20 @@ import (
 )
 
 func (o *Operator) Write(path string, data []byte) error {
-	write := getCFn[operatorWrite](o.ctx, cFnOperatorWrite)
+	write := getCFunc[operatorWrite](o.ctx, symOperatorWrite)
 	return write(o.inner, path, data)
 }
 
 func (o *Operator) CreateDir(path string) error {
-	createDir := getCFn[operatorCreateDir](o.ctx, cFnOperatorCreateDir)
+	createDir := getCFunc[operatorCreateDir](o.ctx, symOperatorCreateDir)
 	return createDir(o.inner, path)
 }
 
-const cFnOperatorWrite = "opendal_operator_write"
+const symOperatorWrite = "opendal_operator_write"
 
 type operatorWrite func(op *opendalOperator, path string, data []byte) error
 
-func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withOperatorWrite(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 3,
@@ -36,7 +36,7 @@ func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnOperatorWrite)
+	fn, err := purego.Dlsym(libopendal, symOperatorWrite)
 	if err != nil {
 		return
 	}
@@ -59,15 +59,15 @@ func operatorWriteRegister(ctx context.Context, libopendal uintptr) (newCtx cont
 		)
 		return parseError(ctx, e)
 	}
-	newCtx = context.WithValue(ctx, cFnOperatorWrite, cFn)
+	newCtx = context.WithValue(ctx, symOperatorWrite, cFn)
 	return
 }
 
-const cFnOperatorCreateDir = "opendal_operator_create_dir"
+const symOperatorCreateDir = "opendal_operator_create_dir"
 
 type operatorCreateDir func(op *opendalOperator, path string) error
 
-func operatorCreateDirRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withOperatorCreateDir(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 2,
@@ -78,7 +78,7 @@ func operatorCreateDirRegister(ctx context.Context, libopendal uintptr) (newCtx 
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnOperatorCreateDir)
+	fn, err := purego.Dlsym(libopendal, symOperatorCreateDir)
 	if err != nil {
 		return
 	}
@@ -96,6 +96,6 @@ func operatorCreateDirRegister(ctx context.Context, libopendal uintptr) (newCtx 
 		)
 		return parseError(ctx, e)
 	}
-	newCtx = context.WithValue(ctx, cFnOperatorCreateDir, cFn)
+	newCtx = context.WithValue(ctx, symOperatorCreateDir, cFn)
 	return
 }

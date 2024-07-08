@@ -78,11 +78,11 @@ func newOperatorOptions(libopendal uintptr) (opts *operatorOptions, err error) {
 	return
 }
 
-const cFnOperatorOptionsSet = "opendal_operator_options_set"
+const symOperatorOptionSet = "opendal_operator_options_set"
 
 type operatorOptionsSet func(opts *operatorOptions, key, value string) error
 
-func operatorOptionsSetRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withOperatorOptionsSet(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 3,
@@ -94,7 +94,7 @@ func operatorOptionsSetRegister(ctx context.Context, libopendal uintptr) (newCtx
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnOperatorOptionsSet)
+	fn, err := purego.Dlsym(libopendal, symOperatorOptionSet)
 	if err != nil {
 		return
 	}
@@ -114,7 +114,7 @@ func operatorOptionsSetRegister(ctx context.Context, libopendal uintptr) (newCtx
 		ffi.Call(&cif, fn, nil, unsafe.Pointer(&opts), unsafe.Pointer(&byteKey), unsafe.Pointer(&byteValue))
 		return nil
 	}
-	newCtx = context.WithValue(ctx, cFnOperatorOptionsSet, cFn)
+	newCtx = context.WithValue(ctx, symOperatorOptionSet, cFn)
 	return
 }
 

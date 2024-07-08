@@ -11,15 +11,15 @@ import (
 )
 
 func (o *Operator) Read(path string) ([]byte, error) {
-	read := getCFn[operatorRead](o.ctx, cFnOperatorRead)
+	read := getCFunc[operatorRead](o.ctx, symOperatorRead)
 	return read(o.inner, path)
 }
 
 type operatorRead func(op *opendalOperator, path string) ([]byte, error)
 
-const cFnOperatorRead = "opendal_operator_read"
+const symOperatorRead = "opendal_operator_read"
 
-func operatorReadRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withOperatorRead(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 2,
@@ -30,7 +30,7 @@ func operatorReadRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnOperatorRead)
+	fn, err := purego.Dlsym(libopendal, symOperatorRead)
 	if err != nil {
 		return
 	}
@@ -48,6 +48,6 @@ func operatorReadRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		)
 		return parseBytes(result.data), parseError(ctx, result.error)
 	}
-	newCtx = context.WithValue(ctx, cFnOperatorRead, cFn)
+	newCtx = context.WithValue(ctx, symOperatorRead, cFn)
 	return
 }

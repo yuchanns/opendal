@@ -7,6 +7,11 @@ import (
 	"github.com/ebitengine/purego"
 )
 
+type Schemer interface {
+	Scheme() string
+	Path() string
+}
+
 type OperatorOptions map[string]string
 
 type Operator struct {
@@ -20,7 +25,7 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 	if err != nil {
 		return
 	}
-	ctx, err := registerCFn(libopendal)
+	ctx, err := contextWithCFuncs(libopendal)
 	if err != nil {
 		return
 	}
@@ -29,7 +34,7 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 		purego.Dlclose(libopendal)
 		return
 	}
-	setOptions := getCFn[operatorOptionsSet](ctx, cFnOperatorOptionsSet)
+	setOptions := getCFunc[operatorOptionsSet](ctx, symOperatorOptionSet)
 	for key, value := range opts {
 		setOptions(opt, key, value)
 	}
@@ -56,9 +61,9 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 	return
 }
 
-func registerCFn(libopendal uintptr) (ctx context.Context, err error) {
+func contextWithCFuncs(libopendal uintptr) (ctx context.Context, err error) {
 	ctx = context.Background()
-	for _, register := range cFnRegisters {
+	for _, register := range withCFuncs {
 		ctx, err = register(ctx, libopendal)
 		if err != nil {
 			return
@@ -67,28 +72,28 @@ func registerCFn(libopendal uintptr) (ctx context.Context, err error) {
 	return
 }
 
-type cFnRegister func(context.Context, uintptr) (context.Context, error)
+type withCFunc func(context.Context, uintptr) (context.Context, error)
 
-func getCFn[T any](ctx context.Context, key string) T {
+func getCFunc[T any](ctx context.Context, key string) T {
 	return ctx.Value(key).(T)
 }
 
-var cFnRegisters = []cFnRegister{
-	// two registers must be on top
-	bytesFreeRegister,
-	errorFreeRegister,
+var withCFuncs = []withCFunc{
+	// free must be on top
+	withBytesFree,
+	withErrorFree,
 
-	operatorOptionsSetRegister,
+	withOperatorOptionsSet,
 
-	operatorCreateDirRegister,
-	operatorReadRegister,
-	operatorWriteRegister,
-	operatorDeleteRegister,
-	operatorStatRegister,
+	withOperatorCreateDir,
+	withOperatorRead,
+	withOperatorWrite,
+	withOperatorDelete,
+	withOperatorStat,
 
-	metadataContentLengthRegister,
-	metadataIsFileRegister,
-	metadataIsDirRegister,
-	metadataLastModifiedMsRegister,
-	metadataFreeRegister,
+	withMetaContentLength,
+	withMetaIsFile,
+	withMetaIsDir,
+	withMetaLastModified,
+	withMetaFree,
 }

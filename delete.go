@@ -11,15 +11,15 @@ import (
 )
 
 func (o *Operator) Delete(path string) error {
-	delete := getCFn[operatorDelete](o.ctx, cFnOperatorDelete)
+	delete := getCFunc[operatorDelete](o.ctx, symOperatorDelete)
 	return delete(o.inner, path)
 }
 
 type operatorDelete func(op *opendalOperator, path string) error
 
-const cFnOperatorDelete = "opendal_operator_delete"
+const symOperatorDelete = "opendal_operator_delete"
 
-func operatorDeleteRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withOperatorDelete(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 2,
@@ -30,7 +30,7 @@ func operatorDeleteRegister(ctx context.Context, libopendal uintptr) (newCtx con
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnOperatorDelete)
+	fn, err := purego.Dlsym(libopendal, symOperatorDelete)
 	if err != nil {
 		return
 	}
@@ -48,6 +48,6 @@ func operatorDeleteRegister(ctx context.Context, libopendal uintptr) (newCtx con
 		)
 		return parseError(ctx, e)
 	}
-	newCtx = context.WithValue(ctx, cFnOperatorDelete, cFn)
+	newCtx = context.WithValue(ctx, symOperatorDelete, cFn)
 	return
 }

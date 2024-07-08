@@ -14,7 +14,7 @@ func parseError(ctx context.Context, e *opendalError) error {
 	if e == nil {
 		return nil
 	}
-	free := getCFn[errorFree](ctx, cFnErrorFree)
+	free := getCFunc[errorFree](ctx, symErrorFree)
 	defer free(e)
 	return &Error{
 		code:    e.code,
@@ -41,9 +41,9 @@ func (e *Error) Message() string {
 
 type errorFree func(e *opendalError)
 
-const cFnErrorFree = "opendal_error_free"
+const symErrorFree = "opendal_error_free"
 
-func errorFreeRegister(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+func withErrorFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,
@@ -53,7 +53,7 @@ func errorFreeRegister(ctx context.Context, libopendal uintptr) (newCtx context.
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnErrorFree)
+	fn, err := purego.Dlsym(libopendal, symErrorFree)
 	if err != nil {
 		return
 	}
@@ -64,6 +64,6 @@ func errorFreeRegister(ctx context.Context, libopendal uintptr) (newCtx context.
 			unsafe.Pointer(&e),
 		)
 	}
-	newCtx = context.WithValue(ctx, cFnErrorFree, cFn)
+	newCtx = context.WithValue(ctx, symErrorFree, cFn)
 	return
 }
