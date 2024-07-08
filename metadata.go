@@ -47,6 +47,10 @@ func (m *Metadata) IsDir() bool {
 func (m *Metadata) LastModified() time.Time {
 	lastModifiedMs := getCFn[metadataLastModifiedMs](m.ctx, cFnMetadataLastModifiedMs)
 	ms := lastModifiedMs(m.inner)
+	if ms == -1 {
+		var zeroTime time.Time
+		return zeroTime
+	}
 	return time.UnixMilli(ms)
 }
 

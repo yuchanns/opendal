@@ -34,7 +34,7 @@ func operatorStatRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		err = errors.New(status.String())
 		return
 	}
-	fn, err := purego.Dlsym(libopendal, cFnOperatorRead)
+	fn, err := purego.Dlsym(libopendal, cFnOperatorStat)
 	if err != nil {
 		return
 	}
@@ -53,7 +53,7 @@ func operatorStatRegister(ctx context.Context, libopendal uintptr) (newCtx conte
 		if result.error != nil {
 			return nil, parseError(ctx, result.error)
 		}
-		return (*opendalMetadata)(unsafe.Pointer(uintptr(unsafe.Pointer(&result)) + unsafe.Offsetof(result.meta))), nil
+		return result.meta, nil
 	}
 	newCtx = context.WithValue(ctx, cFnOperatorStat, cFn)
 	return
