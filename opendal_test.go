@@ -20,9 +20,15 @@ func TestBehavior(t *testing.T) {
 	op, err := newOperator()
 	require.Nil(t, err)
 
-	var tests = []behaviorTest{
-		testStat,
-		testWrite,
+	cap := op.Info().GetFullCapability()
+
+	var tests []behaviorTest
+
+	if cap.Stat() && cap.Write() && cap.Blocking() {
+		tests = append(tests,
+			testStat,
+			testWrite,
+		)
 	}
 
 	for i := range tests {

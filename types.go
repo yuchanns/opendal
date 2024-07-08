@@ -45,7 +45,89 @@ var (
 			nil,
 		}[0],
 	}
+
+	typeCapability = ffi.Type{
+		Type: ffi.Struct,
+		Elements: &[]*ffi.Type{
+			&ffi.TypeUint32, // stat
+			&ffi.TypeUint32, // stat_with_if_match
+			&ffi.TypeUint32, // stat_with_if_none_match
+			&ffi.TypeUint32, // read
+			&ffi.TypeUint32, // read_with_if_match
+			&ffi.TypeUint32, // read_with_if_match_none
+			&ffi.TypeUint32, // read_with_override_cache_control
+			&ffi.TypeUint32, // read_with_override_content_disposition
+			&ffi.TypeUint32, // read_with_override_content_type
+			&ffi.TypeUint32, // write
+			&ffi.TypeUint32, // write_can_multi
+			&ffi.TypeUint32, // write_can_empty
+			&ffi.TypeUint32, // write_can_append
+			&ffi.TypeUint32, // write_with_content_type
+			&ffi.TypeUint32, // write_with_content_disposition
+			&ffi.TypeUint32, // write_with_cache_control
+			&ffi.TypeUint32, // write_multi_max_size
+			&ffi.TypeUint32, // write_multi_min_size
+			&ffi.TypeUint32, // write_multi_align_size
+			&ffi.TypeUint32, // write_total_max_size
+			&ffi.TypeUint32, // create_dir
+			&ffi.TypeUint32, // delete
+			&ffi.TypeUint32, // copy
+			&ffi.TypeUint32, // rename
+			&ffi.TypeUint32, // list
+			&ffi.TypeUint32, // list_with_limit
+			&ffi.TypeUint32, // list_with_start_after
+			&ffi.TypeUint32, // list_with_recursive
+			&ffi.TypeUint32, // presign
+			&ffi.TypeUint32, // presign_read
+			&ffi.TypeUint32, // presign_stat
+			&ffi.TypeUint32, // presign_write
+			&ffi.TypeUint32, // batch
+			&ffi.TypeUint32, // batch_delete
+			&ffi.TypeUint32, // batch_max_operations
+			&ffi.TypeUint32, // blocking
+			nil,
+		}[0],
+	}
 )
+
+type opendalCapability struct {
+	stat                               uint8
+	statWithIfmatch                    uint8
+	statWithIfNoneMatch                uint8
+	read                               uint8
+	readWithIfmatch                    uint8
+	readWithIfMatchNone                uint8
+	readWithOverrideCacheControl       uint8
+	readWithOverrideContentDisposition uint8
+	readWithOverrideContentType        uint8
+	write                              uint8
+	writeCanMulti                      uint8
+	writeCanEmpty                      uint8
+	writeCanAppend                     uint8
+	writeWithContentType               uint8
+	writeWithContentDisposition        uint8
+	writeWithCacheControl              uint8
+	writeMultiMaxSize                  uint
+	writeMultiMinSize                  uint
+	writeMultiAlignSize                uint
+	writeTotalMaxSize                  uint
+	createDir                          uint8
+	delete                             uint8
+	copy                               uint8
+	rename                             uint8
+	list                               uint8
+	listWithLimit                      uint8
+	listWithStartAfter                 uint8
+	listWithRecursive                  uint8
+	presign                            uint8
+	presignRead                        uint8
+	presignStat                        uint8
+	presignWrite                       uint8
+	batch                              uint8
+	batchDelete                        uint8
+	batchMaxOperations                 uint
+	blocking                           uint8
+}
 
 type resultOperatorNew struct {
 	op    *opendalOperator
@@ -78,6 +160,10 @@ type opendalBytes struct {
 type opendalError struct {
 	code    int32
 	message opendalBytes
+}
+
+type opendalOperatorInfo struct {
+	inner uintptr
 }
 
 func freeBytes(ctx context.Context, b *opendalBytes) {

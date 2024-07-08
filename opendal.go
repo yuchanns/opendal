@@ -85,6 +85,10 @@ var withCFuncs = []withCFunc{
 
 	withOperatorOptionsSet,
 
+	withOperatorInfoNew,
+	withOperatorInfoGetFullCapability,
+	withOperatorInfoFree,
+
 	withOperatorCreateDir,
 	withOperatorRead,
 	withOperatorWrite,
