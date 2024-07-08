@@ -93,6 +93,8 @@ var withCFuncs = []withCFunc{
 	withOperatorInfoGetFullCapability,
 	withOperatorInfoGetNativeCapability,
 	withOperatorInfoGetScheme,
+	withOperatorInfoGetRoot,
+	withOperatorInfoGetName,
 	withOperatorInfoFree,
 
 	withOperatorCreateDir,

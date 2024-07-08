@@ -45,6 +45,16 @@ func (i *OperatorInfo) GetScheme() string {
 	return getScheme(i.inner)
 }
 
+func (i *OperatorInfo) GetRoot() string {
+	getRoot := getCFunc[operatorInfoGetRoot](i.ctx, symOperatorInfoGetRoot)
+	return getRoot(i.inner)
+}
+
+func (i *OperatorInfo) GetName() string {
+	getName := getCFunc[operatorInfoGetName](i.ctx, symOperatorInfoGetName)
+	return getName(i.inner)
+}
+
 type Capability struct {
 	inner *opendalCapability
 }
@@ -324,5 +334,59 @@ func withOperatorInfoGetScheme(ctx context.Context, libopendal uintptr) (newCtx 
 		return unix.BytePtrToString(bytePtr)
 	}
 	newCtx = context.WithValue(ctx, symOperatorInfoGetScheme, cFn)
+	return
+}
+
+const symOperatorInfoGetRoot = "opendal_operator_info_get_root"
+
+type operatorInfoGetRoot func(self *opendalOperatorInfo) string
+
+func withOperatorInfoGetRoot(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(
+		&cif, ffi.DefaultAbi, 1,
+		&ffi.TypePointer,
+		&ffi.TypePointer,
+	); status != ffi.OK {
+		err = errors.New(status.String())
+		return
+	}
+	fn, err := purego.Dlsym(libopendal, symOperatorInfoGetRoot)
+	if err != nil {
+		return
+	}
+	var cFn operatorInfoGetRoot = func(info *opendalOperatorInfo) string {
+		var bytePtr *byte
+		ffi.Call(&cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
+		return unix.BytePtrToString(bytePtr)
+	}
+	newCtx = context.WithValue(ctx, symOperatorInfoGetRoot, cFn)
+	return
+}
+
+const symOperatorInfoGetName = "opendal_operator_info_get_name"
+
+type operatorInfoGetName func(self *opendalOperatorInfo) string
+
+func withOperatorInfoGetName(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(
+		&cif, ffi.DefaultAbi, 1,
+		&ffi.TypePointer,
+		&ffi.TypePointer,
+	); status != ffi.OK {
+		err = errors.New(status.String())
+		return
+	}
+	fn, err := purego.Dlsym(libopendal, symOperatorInfoGetName)
+	if err != nil {
+		return
+	}
+	var cFn operatorInfoGetName = func(info *opendalOperatorInfo) string {
+		var bytePtr *byte
+		ffi.Call(&cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
+		return unix.BytePtrToString(bytePtr)
+	}
+	newCtx = context.WithValue(ctx, symOperatorInfoGetName, cFn)
 	return
 }
