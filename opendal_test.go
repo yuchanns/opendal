@@ -16,8 +16,8 @@ func TestBehavior(t *testing.T) {
 	suite.Run(t, new(BehaviorTestSuite))
 }
 
-var schemes = map[string]opendal.Schemer{
-	"aliyun_drive": aliyun_drive.Scheme,
+var schemes = []opendal.Schemer{
+	aliyun_drive.Scheme,
 }
 
 type BehaviorTestSuite struct {
@@ -28,10 +28,18 @@ type BehaviorTestSuite struct {
 
 func (s *BehaviorTestSuite) SetupSuite() {
 	test := os.Getenv("OPENDAL_TEST")
-	scheme, ok := schemes[test]
-	s.Require().True(ok, "unsupported scheme: %s", test)
+	var scheme opendal.Schemer
+	for _, s := range schemes {
+		if s.Scheme() != test {
+			continue
+		}
+		scheme = s
+		break
+	}
+	s.Require().NotNil(scheme, "unsupported scheme: %s", test)
 
 	prefix := fmt.Sprintf("OPENDAL_%s_", strings.ToUpper(scheme.Scheme()))
+
 	opts := opendal.OperatorOptions{}
 	for _, env := range os.Environ() {
 		pair := strings.SplitN(env, "=", 2)
@@ -40,18 +48,20 @@ func (s *BehaviorTestSuite) SetupSuite() {
 		}
 		key := pair[0]
 		value := pair[1]
-		if strings.HasPrefix(key, prefix) {
-			opts[strings.ToLower(strings.TrimPrefix(key, prefix))] = value
+		if !strings.HasPrefix(key, prefix) {
+			continue
 		}
+		opts[strings.ToLower(strings.TrimPrefix(key, prefix))] = value
 	}
+
 	op, err := opendal.NewOperator(scheme, opts)
-	if err != nil {
-		panic(fmt.Errorf("cannot create operator: %s", err))
-	}
+	s.Require().Nil(err, "create operator must succeed")
+
 	s.op = op
 }
 
 func (s *BehaviorTestSuite) TestStat() {
+	s.T().Parallel()
 	assert := s.Require()
 	op := s.op
 
@@ -89,6 +99,7 @@ func (s *BehaviorTestSuite) TestStat() {
 }
 
 func (s *BehaviorTestSuite) TestWrite() {
+	s.T().Parallel()
 	assert := s.Require()
 	op := s.op
 
