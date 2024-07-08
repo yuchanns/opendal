@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jupiterrider/ffi v0.1.0-beta.9
 	github.com/stretchr/testify v1.9.0
-	github.com/yuchanns/opendal-go-services v0.0.0-20240708103854-bdf26ad81d04
+	github.com/yuchanns/opendal-go-services v0.0.0-20240708144848-06a698ef510c
 	golang.org/x/sys v0.20.0
 )
 

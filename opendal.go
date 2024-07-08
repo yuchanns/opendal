@@ -9,7 +9,7 @@ import (
 
 type Schemer interface {
 	Scheme() string
-	Path() string
+	Path() (string, error)
 }
 
 type OperatorOptions map[string]string
@@ -21,7 +21,11 @@ type Operator struct {
 }
 
 func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error) {
-	libopendal, err := purego.Dlopen(scheme.Path(), purego.RTLD_LAZY|purego.RTLD_GLOBAL)
+	path, err := scheme.Path()
+	if err != nil {
+		return
+	}
+	libopendal, err := purego.Dlopen(path, purego.RTLD_LAZY|purego.RTLD_GLOBAL)
 	if err != nil {
 		return
 	}
@@ -87,6 +91,8 @@ var withCFuncs = []withCFunc{
 
 	withOperatorInfoNew,
 	withOperatorInfoGetFullCapability,
+	withOperatorInfoGetNativeCapability,
+	withOperatorInfoGetScheme,
 	withOperatorInfoFree,
 
 	withOperatorCreateDir,

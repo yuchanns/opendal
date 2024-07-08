@@ -8,6 +8,7 @@ import (
 
 	"github.com/ebitengine/purego"
 	"github.com/jupiterrider/ffi"
+	"golang.org/x/sys/unix"
 )
 
 func (op *Operator) Info() *OperatorInfo {
@@ -31,6 +32,17 @@ func (i *OperatorInfo) GetFullCapability() *Capability {
 	getCap := getCFunc[operatorInfoGetFullCapability](i.ctx, symOperatorInfoGetFullCapability)
 	cap := getCap(i.inner)
 	return &Capability{inner: cap}
+}
+
+func (i *OperatorInfo) GetNativeCapability() *Capability {
+	getCap := getCFunc[operatorInfoGetNativeCapability](i.ctx, symOperatorInfoGetNativeCapability)
+	cap := getCap(i.inner)
+	return &Capability{inner: cap}
+}
+
+func (i *OperatorInfo) GetScheme() string {
+	getScheme := getCFunc[operatorInfoGetScheme](i.ctx, symOperatorInfoGetScheme)
+	return getScheme(i.inner)
 }
 
 type Capability struct {
@@ -252,11 +264,65 @@ func withOperatorInfoGetFullCapability(ctx context.Context, libopendal uintptr) 
 	if err != nil {
 		return
 	}
-	var cFn operatorInfoGetFullCapability = func(op *opendalOperatorInfo) *opendalCapability {
+	var cFn operatorInfoGetFullCapability = func(info *opendalOperatorInfo) *opendalCapability {
 		var cap opendalCapability
-		ffi.Call(&cif, fn, unsafe.Pointer(&cap), unsafe.Pointer(&op))
+		ffi.Call(&cif, fn, unsafe.Pointer(&cap), unsafe.Pointer(&info))
 		return &cap
 	}
 	newCtx = context.WithValue(ctx, symOperatorInfoGetFullCapability, cFn)
+	return
+}
+
+const symOperatorInfoGetNativeCapability = "opendal_operator_info_get_native_capability"
+
+type operatorInfoGetNativeCapability func(self *opendalOperatorInfo) *opendalCapability
+
+func withOperatorInfoGetNativeCapability(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(
+		&cif, ffi.DefaultAbi, 1,
+		&typeCapability,
+		&ffi.TypePointer,
+	); status != ffi.OK {
+		err = errors.New(status.String())
+		return
+	}
+	fn, err := purego.Dlsym(libopendal, symOperatorInfoGetNativeCapability)
+	if err != nil {
+		return
+	}
+	var cFn operatorInfoGetNativeCapability = func(info *opendalOperatorInfo) *opendalCapability {
+		var cap opendalCapability
+		ffi.Call(&cif, fn, unsafe.Pointer(&cap), unsafe.Pointer(&info))
+		return &cap
+	}
+	newCtx = context.WithValue(ctx, symOperatorInfoGetNativeCapability, cFn)
+	return
+}
+
+const symOperatorInfoGetScheme = "opendal_operator_info_get_scheme"
+
+type operatorInfoGetScheme func(self *opendalOperatorInfo) string
+
+func withOperatorInfoGetScheme(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(
+		&cif, ffi.DefaultAbi, 1,
+		&ffi.TypePointer,
+		&ffi.TypePointer,
+	); status != ffi.OK {
+		err = errors.New(status.String())
+		return
+	}
+	fn, err := purego.Dlsym(libopendal, symOperatorInfoGetScheme)
+	if err != nil {
+		return
+	}
+	var cFn operatorInfoGetScheme = func(info *opendalOperatorInfo) string {
+		var bytePtr *byte
+		ffi.Call(&cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
+		return unix.BytePtrToString(bytePtr)
+	}
+	newCtx = context.WithValue(ctx, symOperatorInfoGetScheme, cFn)
 	return
 }
