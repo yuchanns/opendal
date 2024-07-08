@@ -5,5 +5,10 @@ The magic behind is [purego](https://github.com/ebitengine/purego) + [ffi](https
 **required**: Installation of [libffi](https://github.com/libffi/libffi).
 
 ```bash
-CGO_ENABLE=0 go test -v .
+# Run all tests
+CGO_ENABLE=0 go test -v -run TestBehavior
+# Run specific test
+CGO_ENABLE=0 go test -v -run TestBehavior/Write
+# Run synchronously
+CGO_ENABLE=0 GOMAXPROCS=1 go test -v -run TestBehavior
 ```

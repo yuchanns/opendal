@@ -4,29 +4,50 @@ import (
 	"fmt"
 	"opendal"
 	"os"
+	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/require"
 	"github.com/yuchanns/opendal-go-services/aliyun_drive"
 )
 
+type behaviorTest = func(assert *require.Assertions, op *opendal.Operator)
+
 func TestBehavior(t *testing.T) {
-	suite.Run(t, new(BehaviorTestSuite))
+	op, err := newOperator()
+	require.Nil(t, err)
+
+	var tests = []behaviorTest{
+		testStat,
+		testWrite,
+	}
+
+	for i := range tests {
+		test := tests[i]
+
+		fullName := runtime.FuncForPC(reflect.ValueOf(test).Pointer()).Name()
+		parts := strings.Split(fullName, ".")
+		testName := strings.TrimPrefix(parts[len((parts))-1], "test")
+
+		t.Run(testName, func(t *testing.T) {
+			// Run all tests in parallel by default.
+			// To run synchronously for specific services, set GOMAXPROCS=1.
+			t.Parallel()
+			assert := require.New(t)
+
+			test(assert, op)
+		})
+	}
 }
 
-var schemes = []opendal.Schemer{
-	aliyun_drive.Scheme,
-}
+func newOperator() (op *opendal.Operator, err error) {
+	var schemes = []opendal.Schemer{
+		aliyun_drive.Scheme,
+	}
 
-type BehaviorTestSuite struct {
-	suite.Suite
-
-	op *opendal.Operator
-}
-
-func (s *BehaviorTestSuite) SetupSuite() {
 	test := os.Getenv("OPENDAL_TEST")
 	var scheme opendal.Schemer
 	for _, s := range schemes {
@@ -36,7 +57,10 @@ func (s *BehaviorTestSuite) SetupSuite() {
 		scheme = s
 		break
 	}
-	s.Require().NotNil(scheme, "unsupported scheme: %s", test)
+	if scheme == nil {
+		err = fmt.Errorf("unsupported scheme: %s", test)
+		return
+	}
 
 	prefix := fmt.Sprintf("OPENDAL_%s_", strings.ToUpper(scheme.Scheme()))
 
@@ -54,16 +78,15 @@ func (s *BehaviorTestSuite) SetupSuite() {
 		opts[strings.ToLower(strings.TrimPrefix(key, prefix))] = value
 	}
 
-	op, err := opendal.NewOperator(scheme, opts)
-	s.Require().Nil(err, "create operator must succeed")
+	op, err = opendal.NewOperator(scheme, opts)
+	if err != nil {
+		err = fmt.Errorf("create operator must succeed: %s", err)
+	}
 
-	s.op = op
+	return
 }
 
-func (s *BehaviorTestSuite) TestStat() {
-	assert := s.Require()
-	op := s.op
-
+func testStat(assert *require.Assertions, op *opendal.Operator) {
 	uuid := uuid.NewString()
 	dir := fmt.Sprintf("%s/dir/", uuid)
 	path := fmt.Sprintf("%s/path", dir)
@@ -97,10 +120,7 @@ func (s *BehaviorTestSuite) TestStat() {
 	assert.Nil(err)
 }
 
-func (s *BehaviorTestSuite) TestWrite() {
-	assert := s.Require()
-	op := s.op
-
+func testWrite(assert *require.Assertions, op *opendal.Operator) {
 	uuid := uuid.NewString()
 	path := fmt.Sprintf("%s/path", uuid)
 	data := []byte(uuid)
