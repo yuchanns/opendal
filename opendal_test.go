@@ -61,7 +61,6 @@ func (s *BehaviorTestSuite) SetupSuite() {
 }
 
 func (s *BehaviorTestSuite) TestStat() {
-	s.T().Parallel()
 	assert := s.Require()
 	op := s.op
 
@@ -99,7 +98,6 @@ func (s *BehaviorTestSuite) TestStat() {
 }
 
 func (s *BehaviorTestSuite) TestWrite() {
-	s.T().Parallel()
 	assert := s.Require()
 	op := s.op
 
