@@ -2,11 +2,9 @@ package opendal
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"unsafe"
 
-	"github.com/ebitengine/purego"
 	"github.com/jupiterrider/ffi"
 )
 
@@ -86,26 +84,18 @@ type errorFree func(e *opendalError)
 const symErrorFree = "opendal_error_free"
 
 func withErrorFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypeVoid,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symErrorFree)
-	if err != nil {
-		return
-	}
-	var cFn errorFree = func(e *opendalError) {
-		ffi.Call(
-			&cif, fn,
-			nil,
-			unsafe.Pointer(&e),
-		)
-	}
-	newCtx = context.WithValue(ctx, symErrorFree, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symErrorFree,
+		nArgs:  1,
+		rType:  &ffi.TypeVoid,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) errorFree {
+		return func(e *opendalError) {
+			ffi.Call(
+				cif, fn,
+				nil,
+				unsafe.Pointer(&e),
+			)
+		}
+	})
 }

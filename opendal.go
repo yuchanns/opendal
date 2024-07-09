@@ -2,9 +2,11 @@ package opendal
 
 import (
 	"context"
+	"errors"
 	"runtime"
 
 	"github.com/ebitengine/purego"
+	"github.com/jupiterrider/ffi"
 )
 
 type Schemer interface {
@@ -80,6 +82,32 @@ type withCFunc func(context.Context, uintptr) (context.Context, error)
 
 func getCFunc[T any](ctx context.Context, key string) T {
 	return ctx.Value(key).(T)
+}
+
+type ffiOpts struct {
+	sym    string
+	nArgs  uint32
+	rType  *ffi.Type
+	aTypes []*ffi.Type
+}
+
+func withFFI[T any](
+	ctx context.Context, libopendal uintptr, opts ffiOpts,
+	withFunc func(cif *ffi.Cif, fn uintptr) T,
+) (context.Context, error) {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(
+		&cif, ffi.DefaultAbi, opts.nArgs,
+		opts.rType,
+		opts.aTypes...,
+	); status != ffi.OK {
+		return nil, errors.New(status.String())
+	}
+	fnPtr, err := purego.Dlsym(libopendal, opts.sym)
+	if err != nil {
+		return nil, err
+	}
+	return context.WithValue(ctx, opts.sym, withFunc(&cif, fnPtr)), nil
 }
 
 var withCFuncs = []withCFunc{

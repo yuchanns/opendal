@@ -2,11 +2,9 @@ package opendal
 
 import (
 	"context"
-	"errors"
 	"runtime"
 	"unsafe"
 
-	"github.com/ebitengine/purego"
 	"github.com/jupiterrider/ffi"
 	"golang.org/x/sys/unix"
 )
@@ -86,34 +84,25 @@ const symOperatorList = "opendal_operator_list"
 type operatorList func(op *opendalOperator, path string) (*opendalLister, error)
 
 func withOperatorList(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 2,
-		&typeResultList,
-		&ffi.TypePointer,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symOperatorList)
-	if err != nil {
-		return
-	}
-	var cFn operatorList = func(op *opendalOperator, path string) (*opendalLister, error) {
-		bytePath, err := unix.BytePtrFromString(path)
-		if err != nil {
-			return nil, err
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorList,
+		nArgs:  2,
+		rType:  &typeResultList,
+		aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorList {
+		return func(op *opendalOperator, path string) (*opendalLister, error) {
+			bytePath, err := unix.BytePtrFromString(path)
+			if err != nil {
+				return nil, err
+			}
+			var result opendalResultList
+			ffi.Call(cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&op), unsafe.Pointer(&bytePath))
+			if result.err != nil {
+				return nil, parseError(ctx, result.err)
+			}
+			return result.lister, nil
 		}
-		var result opendalResultList
-		ffi.Call(&cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&op), unsafe.Pointer(&bytePath))
-		if result.err != nil {
-			return nil, parseError(ctx, result.err)
-		}
-		return result.lister, nil
-	}
-	newCtx = context.WithValue(ctx, symOperatorList, cFn)
-	return
+	})
 }
 
 const symListerFree = "opendal_lister_free"
@@ -121,24 +110,16 @@ const symListerFree = "opendal_lister_free"
 type listerFree func(l *opendalLister)
 
 func withListerFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypeVoid,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symListerFree)
-	if err != nil {
-		return
-	}
-	var cFn listerFree = func(l *opendalLister) {
-		ffi.Call(&cif, fn, nil, unsafe.Pointer(&l))
-	}
-	newCtx = context.WithValue(ctx, symListerFree, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symListerFree,
+		nArgs:  1,
+		rType:  &ffi.TypeVoid,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) listerFree {
+		return func(l *opendalLister) {
+			ffi.Call(cif, fn, nil, unsafe.Pointer(&l))
+		}
+	})
 }
 
 const symListerNext = "opendal_lister_next"
@@ -146,29 +127,21 @@ const symListerNext = "opendal_lister_next"
 type listerNext func(l *opendalLister) (*opendalEntry, error)
 
 func withListerNext(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&typeResultListerNext,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symListerNext)
-	if err != nil {
-		return
-	}
-	var cFn listerNext = func(l *opendalLister) (*opendalEntry, error) {
-		var result opendalResultListerNext
-		ffi.Call(&cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&l))
-		if result.err != nil {
-			return nil, parseError(ctx, result.err)
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symListerNext,
+		nArgs:  1,
+		rType:  &typeResultListerNext,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) listerNext {
+		return func(l *opendalLister) (*opendalEntry, error) {
+			var result opendalResultListerNext
+			ffi.Call(cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&l))
+			if result.err != nil {
+				return nil, parseError(ctx, result.err)
+			}
+			return result.entry, nil
 		}
-		return result.entry, nil
-	}
-	newCtx = context.WithValue(ctx, symListerNext, cFn)
-	return
+	})
 }
 
 const symEntryFree = "opendal_entry_free"
@@ -176,24 +149,16 @@ const symEntryFree = "opendal_entry_free"
 type entryFree func(e *opendalEntry)
 
 func withEntryFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypeVoid,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symEntryFree)
-	if err != nil {
-		return
-	}
-	var cFn entryFree = func(e *opendalEntry) {
-		ffi.Call(&cif, fn, nil, unsafe.Pointer(&e))
-	}
-	newCtx = context.WithValue(ctx, symEntryFree, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symEntryFree,
+		nArgs:  1,
+		rType:  &ffi.TypePointer,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) entryFree {
+		return func(e *opendalEntry) {
+			ffi.Call(cif, fn, nil, unsafe.Pointer(&e))
+		}
+	})
 }
 
 const symEntryName = "opendal_entry_name"
@@ -201,26 +166,18 @@ const symEntryName = "opendal_entry_name"
 type entryName func(e *opendalEntry) string
 
 func withEntryName(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypePointer,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symEntryName)
-	if err != nil {
-		return
-	}
-	var cFn entryName = func(e *opendalEntry) string {
-		var bytePtr *byte
-		ffi.Call(&cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&e))
-		return unix.BytePtrToString(bytePtr)
-	}
-	newCtx = context.WithValue(ctx, symEntryName, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symEntryName,
+		nArgs:  1,
+		rType:  &ffi.TypePointer,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) entryName {
+		return func(e *opendalEntry) string {
+			var bytePtr *byte
+			ffi.Call(cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&e))
+			return unix.BytePtrToString(bytePtr)
+		}
+	})
 }
 
 const symEntryPath = "opendal_entry_path"
@@ -228,24 +185,16 @@ const symEntryPath = "opendal_entry_path"
 type entryPath func(e *opendalEntry) string
 
 func withEntryPath(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypePointer,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symEntryPath)
-	if err != nil {
-		return
-	}
-	var cFn entryPath = func(e *opendalEntry) string {
-		var bytePtr *byte
-		ffi.Call(&cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&e))
-		return unix.BytePtrToString(bytePtr)
-	}
-	newCtx = context.WithValue(ctx, symEntryPath, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symEntryPath,
+		nArgs:  1,
+		rType:  &ffi.TypePointer,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) entryPath {
+		return func(e *opendalEntry) string {
+			var bytePtr *byte
+			ffi.Call(cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&e))
+			return unix.BytePtrToString(bytePtr)
+		}
+	})
 }

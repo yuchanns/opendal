@@ -2,11 +2,9 @@ package opendal
 
 import (
 	"context"
-	"errors"
 	"runtime"
 	"unsafe"
 
-	"github.com/ebitengine/purego"
 	"github.com/jupiterrider/ffi"
 	"golang.org/x/sys/unix"
 )
@@ -208,133 +206,92 @@ const symOperatorInfoNew = "opendal_operator_info_new"
 type operatorInfoNew func(op *opendalOperator) *opendalOperatorInfo
 
 func withOperatorInfoNew(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypePointer,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symOperatorInfoNew)
-	if err != nil {
-		return
-	}
-	var cFn operatorInfoNew = func(op *opendalOperator) *opendalOperatorInfo {
-		var result *opendalOperatorInfo
-		ffi.Call(&cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&op))
-		return result
-	}
-	newCtx = context.WithValue(ctx, symOperatorInfoNew, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorInfoNew,
+		nArgs:  1,
+		rType:  &ffi.TypePointer,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorInfoNew {
+		return func(op *opendalOperator) *opendalOperatorInfo {
+			var result *opendalOperatorInfo
+			ffi.Call(cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&op))
+			return result
+		}
+	})
 }
 
 const symOperatorInfoFree = "opendal_operator_info_free"
 
-type operatorInfoFree func(self *opendalOperatorInfo)
+type operatorInfoFree func(info *opendalOperatorInfo)
 
 func withOperatorInfoFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypeVoid,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symOperatorInfoFree)
-	if err != nil {
-		return
-	}
-	var cFn operatorInfoFree = func(info *opendalOperatorInfo) {
-		ffi.Call(&cif, fn, nil, unsafe.Pointer(&info))
-		return
-	}
-	newCtx = context.WithValue(ctx, symOperatorInfoFree, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorInfoFree,
+		nArgs:  1,
+		rType:  &ffi.TypeVoid,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorInfoFree {
+		return func(info *opendalOperatorInfo) {
+			ffi.Call(cif, fn, nil, unsafe.Pointer(&info))
+		}
+	})
 }
 
 const symOperatorInfoGetFullCapability = "opendal_operator_info_get_full_capability"
 
-type operatorInfoGetFullCapability func(self *opendalOperatorInfo) *opendalCapability
+type operatorInfoGetFullCapability func(info *opendalOperatorInfo) *opendalCapability
 
 func withOperatorInfoGetFullCapability(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&typeCapability,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symOperatorInfoGetFullCapability)
-	if err != nil {
-		return
-	}
-	var cFn operatorInfoGetFullCapability = func(info *opendalOperatorInfo) *opendalCapability {
-		var cap opendalCapability
-		ffi.Call(&cif, fn, unsafe.Pointer(&cap), unsafe.Pointer(&info))
-		return &cap
-	}
-	newCtx = context.WithValue(ctx, symOperatorInfoGetFullCapability, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorInfoGetFullCapability,
+		nArgs:  1,
+		rType:  &typeCapability,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetFullCapability {
+		return func(info *opendalOperatorInfo) *opendalCapability {
+			var cap opendalCapability
+			ffi.Call(cif, fn, unsafe.Pointer(&cap), unsafe.Pointer(&info))
+			return &cap
+		}
+	})
 }
 
 const symOperatorInfoGetNativeCapability = "opendal_operator_info_get_native_capability"
 
-type operatorInfoGetNativeCapability func(self *opendalOperatorInfo) *opendalCapability
+type operatorInfoGetNativeCapability func(info *opendalOperatorInfo) *opendalCapability
 
 func withOperatorInfoGetNativeCapability(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&typeCapability,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symOperatorInfoGetNativeCapability)
-	if err != nil {
-		return
-	}
-	var cFn operatorInfoGetNativeCapability = func(info *opendalOperatorInfo) *opendalCapability {
-		var cap opendalCapability
-		ffi.Call(&cif, fn, unsafe.Pointer(&cap), unsafe.Pointer(&info))
-		return &cap
-	}
-	newCtx = context.WithValue(ctx, symOperatorInfoGetNativeCapability, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorInfoGetNativeCapability,
+		nArgs:  1,
+		rType:  &typeCapability,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetNativeCapability {
+		return func(info *opendalOperatorInfo) *opendalCapability {
+			var cap opendalCapability
+			ffi.Call(cif, fn, unsafe.Pointer(&cap), unsafe.Pointer(&info))
+			return &cap
+		}
+	})
 }
 
 const symOperatorInfoGetScheme = "opendal_operator_info_get_scheme"
 
-type operatorInfoGetScheme func(self *opendalOperatorInfo) string
+type operatorInfoGetScheme func(info *opendalOperatorInfo) string
 
 func withOperatorInfoGetScheme(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypePointer,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symOperatorInfoGetScheme)
-	if err != nil {
-		return
-	}
-	var cFn operatorInfoGetScheme = func(info *opendalOperatorInfo) string {
-		var bytePtr *byte
-		ffi.Call(&cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
-		return unix.BytePtrToString(bytePtr)
-	}
-	newCtx = context.WithValue(ctx, symOperatorInfoGetScheme, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorInfoGetScheme,
+		nArgs:  1,
+		rType:  &ffi.TypePointer,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetScheme {
+		return func(info *opendalOperatorInfo) string {
+			var bytePtr *byte
+			ffi.Call(cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
+			return unix.BytePtrToString(bytePtr)
+		}
+	})
 }
 
 const symOperatorInfoGetRoot = "opendal_operator_info_get_root"
@@ -342,26 +299,18 @@ const symOperatorInfoGetRoot = "opendal_operator_info_get_root"
 type operatorInfoGetRoot func(self *opendalOperatorInfo) string
 
 func withOperatorInfoGetRoot(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypePointer,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symOperatorInfoGetRoot)
-	if err != nil {
-		return
-	}
-	var cFn operatorInfoGetRoot = func(info *opendalOperatorInfo) string {
-		var bytePtr *byte
-		ffi.Call(&cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
-		return unix.BytePtrToString(bytePtr)
-	}
-	newCtx = context.WithValue(ctx, symOperatorInfoGetRoot, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorInfoGetRoot,
+		nArgs:  1,
+		rType:  &ffi.TypePointer,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetRoot {
+		return func(info *opendalOperatorInfo) string {
+			var bytePtr *byte
+			ffi.Call(cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
+			return unix.BytePtrToString(bytePtr)
+		}
+	})
 }
 
 const symOperatorInfoGetName = "opendal_operator_info_get_name"
@@ -369,24 +318,16 @@ const symOperatorInfoGetName = "opendal_operator_info_get_name"
 type operatorInfoGetName func(self *opendalOperatorInfo) string
 
 func withOperatorInfoGetName(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypePointer,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, symOperatorInfoGetName)
-	if err != nil {
-		return
-	}
-	var cFn operatorInfoGetName = func(info *opendalOperatorInfo) string {
-		var bytePtr *byte
-		ffi.Call(&cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
-		return unix.BytePtrToString(bytePtr)
-	}
-	newCtx = context.WithValue(ctx, symOperatorInfoGetName, cFn)
-	return
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorInfoGetName,
+		nArgs:  1,
+		rType:  &ffi.TypePointer,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetName {
+		return func(info *opendalOperatorInfo) string {
+			var bytePtr *byte
+			ffi.Call(cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
+			return unix.BytePtrToString(bytePtr)
+		}
+	})
 }
