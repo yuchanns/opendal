@@ -12,10 +12,21 @@ import (
 
 func (o *Operator) Read(path string) ([]byte, error) {
 	read := getCFunc[operatorRead](o.ctx, symOperatorRead)
-	return read(o.inner, path)
+	bytes, err := read(o.inner, path)
+	if err != nil {
+		return nil, err
+	}
+
+	data := parseBytes(bytes)
+	if len(data) > 0 {
+		free := getCFunc[bytesFree](o.ctx, symBytesFree)
+		free(bytes)
+
+	}
+	return data, nil
 }
 
-type operatorRead func(op *opendalOperator, path string) ([]byte, error)
+type operatorRead func(op *opendalOperator, path string) (*opendalBytes, error)
 
 const symOperatorRead = "opendal_operator_read"
 
@@ -34,7 +45,7 @@ func withOperatorRead(ctx context.Context, libopendal uintptr) (newCtx context.C
 	if err != nil {
 		return
 	}
-	var cFn operatorRead = func(op *opendalOperator, path string) ([]byte, error) {
+	var cFn operatorRead = func(op *opendalOperator, path string) (*opendalBytes, error) {
 		bytePath, err := unix.BytePtrFromString(path)
 		if err != nil {
 			return nil, err
@@ -46,7 +57,7 @@ func withOperatorRead(ctx context.Context, libopendal uintptr) (newCtx context.C
 			unsafe.Pointer(&op),
 			unsafe.Pointer(&bytePath),
 		)
-		return parseBytesWithFree(ctx, result.data), parseError(ctx, result.error)
+		return result.data, parseError(ctx, result.error)
 	}
 	newCtx = context.WithValue(ctx, symOperatorRead, cFn)
 	return

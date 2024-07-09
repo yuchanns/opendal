@@ -223,13 +223,6 @@ func parseBytes(b *opendalBytes) (data []byte) {
 	return
 }
 
-func parseBytesWithFree(ctx context.Context, b *opendalBytes) (data []byte) {
-	data = parseBytes(b)
-	free := getCFunc[bytesFree](ctx, symBytesFree)
-	free(b)
-	return
-}
-
 type bytesFree func(b *opendalBytes)
 
 const symBytesFree = "opendal_bytes_free"

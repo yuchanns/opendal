@@ -12,3 +12,21 @@ CGO_ENABLE=0 go test -v -run TestBehavior/Write
 # Run synchronously
 CGO_ENABLE=0 GOMAXPROCS=1 go test -v -run TestBehavior
 ```
+
+## Capabilities
+
+- [x] OperatorInfo
+- [x] Stat
+    - [x] Metadata
+- [ ] Reader
+    - [x] Read
+    - [ ] ReaderRead
+- [x] Write
+- [x] Delete
+- [x] CreateDir
+- [ ] Lister
+    - [x] Entry
+    - [ ] Metadata
+- [ ] Copy
+- [ ] Rename
+
