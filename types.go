@@ -46,6 +46,24 @@ var (
 		}[0],
 	}
 
+	typeResultList = ffi.Type{
+		Type: ffi.Struct,
+		Elements: &[]*ffi.Type{
+			&ffi.TypePointer,
+			&ffi.TypePointer,
+			nil,
+		}[0],
+	}
+
+	typeResultListerNext = ffi.Type{
+		Type: ffi.Struct,
+		Elements: &[]*ffi.Type{
+			&ffi.TypePointer,
+			&ffi.TypePointer,
+			nil,
+		}[0],
+	}
+
 	typeCapability = ffi.Type{
 		Type: ffi.Struct,
 		Elements: &[]*ffi.Type{
@@ -166,12 +184,22 @@ type opendalOperatorInfo struct {
 	inner uintptr
 }
 
-func freeBytes(ctx context.Context, b *opendalBytes) {
-	if b == nil || b.len == 0 {
-		return
-	}
-	free := getCFunc[bytesFree](ctx, symBytesFree)
-	free(b)
+type opendalResultList struct {
+	lister *opendalLister
+	err    *opendalError
+}
+
+type opendalLister struct {
+	inner uintptr
+}
+
+type opendalResultListerNext struct {
+	entry *opendalEntry
+	err   *opendalError
+}
+
+type opendalEntry struct {
+	inner uintptr
 }
 
 func toOpendalBytes(data []byte) opendalBytes {
@@ -192,6 +220,13 @@ func parseBytes(b *opendalBytes) (data []byte) {
 	}
 	data = make([]byte, b.len)
 	copy(data, unsafe.Slice(b.data, b.len))
+	return
+}
+
+func parseBytesWithFree(ctx context.Context, b *opendalBytes) (data []byte) {
+	data = parseBytes(b)
+	free := getCFunc[bytesFree](ctx, symBytesFree)
+	free(b)
 	return
 }
 

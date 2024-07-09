@@ -10,15 +10,15 @@ import (
 	"github.com/jupiterrider/ffi"
 )
 
-func parseError(ctx context.Context, e *opendalError) error {
-	if e == nil {
+func parseError(ctx context.Context, err *opendalError) error {
+	if err == nil {
 		return nil
 	}
 	free := getCFunc[errorFree](ctx, symErrorFree)
-	defer free(e)
+	defer free(err)
 	return &Error{
-		code:    e.code,
-		message: string(parseBytes(&e.message)),
+		code:    err.code,
+		message: string(parseBytes(&err.message)),
 	}
 }
 

@@ -108,4 +108,11 @@ var withCFuncs = []withCFunc{
 	withMetaIsDir,
 	withMetaLastModified,
 	withMetaFree,
+
+	withOperatorList,
+	withListerNext,
+	withListerFree,
+	withEntryName,
+	withEntryPath,
+	withEntryFree,
 }

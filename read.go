@@ -46,7 +46,7 @@ func withOperatorRead(ctx context.Context, libopendal uintptr) (newCtx context.C
 			unsafe.Pointer(&op),
 			unsafe.Pointer(&bytePath),
 		)
-		return parseBytes(result.data), parseError(ctx, result.error)
+		return parseBytesWithFree(ctx, result.data), parseError(ctx, result.error)
 	}
 	newCtx = context.WithValue(ctx, symOperatorRead, cFn)
 	return

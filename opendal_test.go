@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 
@@ -28,6 +29,7 @@ func TestBehavior(t *testing.T) {
 		tests = append(tests,
 			testStat,
 			testWrite,
+			testList,
 		)
 	}
 
@@ -95,7 +97,7 @@ func newOperator() (op *opendal.Operator, err error) {
 func testStat(assert *require.Assertions, op *opendal.Operator) {
 	uuid := uuid.NewString()
 	dir := fmt.Sprintf("%s/dir/", uuid)
-	path := fmt.Sprintf("%s/path", dir)
+	path := fmt.Sprintf("%spath", dir)
 	data := []byte(uuid)
 
 	err := op.CreateDir(dir)
@@ -108,7 +110,7 @@ func testStat(assert *require.Assertions, op *opendal.Operator) {
 	assert.NotNil(err)
 	assert.Equal(int32(3), err.(*opendal.Error).Code())
 
-	meta, err := op.Stat(strings.TrimRight(dir, "/"))
+	meta, err := op.Stat(strings.TrimSuffix(dir, "/"))
 	assert.Nil(err)
 	assert.True(meta.IsDir())
 	assert.False(meta.IsFile())
@@ -120,10 +122,8 @@ func testStat(assert *require.Assertions, op *opendal.Operator) {
 	assert.True(meta.IsFile())
 	assert.False(meta.LastModified().IsZero())
 
-	err = op.Delete(path)
-	assert.Nil(err)
-	err = op.Delete(dir)
-	assert.Nil(err)
+	assert.Nil(op.Delete(path))
+	assert.Nil(op.Delete(dir))
 }
 
 func testWrite(assert *require.Assertions, op *opendal.Operator) {
@@ -138,6 +138,48 @@ func testWrite(assert *require.Assertions, op *opendal.Operator) {
 	assert.Nil(err)
 	assert.Equal(data, result)
 
-	err = op.Delete(path)
+	assert.Nil(op.Delete(path))
+}
+
+func testList(assert *require.Assertions, op *opendal.Operator) {
+	uuid := uuid.NewString()
+	dir := fmt.Sprintf("%s/dir/", uuid)
+	pathA := fmt.Sprintf("%spath_a", dir)
+	pathB := fmt.Sprintf("%spath_b", dir)
+	data := []byte(uuid)
+
+	err := op.CreateDir(dir)
 	assert.Nil(err)
+
+	err = op.Write(pathA, data)
+	assert.Nil(err)
+
+	err = op.Write(pathB, data)
+	assert.Nil(err)
+
+	lister, err := op.List(dir)
+	assert.Nil(err)
+
+	var (
+		names []string
+		paths []string
+
+		expectedNames = []string{"path_a", "path_b"}
+		expectedPaths = []string{pathA, pathB}
+	)
+	for lister.Next() {
+		entry := lister.Entry()
+		assert.Nil(entry.Error())
+		names = append(names, entry.Name())
+		paths = append(paths, entry.Path())
+	}
+	slices.Sort(expectedNames)
+	slices.Sort(expectedPaths)
+	slices.Sort(names)
+	slices.Sort(paths)
+
+	assert.Equal(expectedNames, names)
+	assert.Equal(expectedPaths, paths)
+
+	assert.Nil(op.Delete(dir))
 }
