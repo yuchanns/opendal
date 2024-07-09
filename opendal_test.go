@@ -110,7 +110,7 @@ func testStat(assert *require.Assertions, op *opendal.Operator) {
 
 	_, err = op.Stat("/not_exists")
 	assert.NotNil(err)
-	assert.Equal(int32(3), err.(*opendal.Error).Code())
+	assert.Equal(opendal.CodeNotFound, err.(*opendal.Error).Code())
 	exist, err := op.IsExist("/not_exists")
 	assert.Nil(err)
 	assert.False(exist)
