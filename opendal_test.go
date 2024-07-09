@@ -30,6 +30,7 @@ func TestBehavior(t *testing.T) {
 			testStat,
 			testWrite,
 			testList,
+			testReader,
 		)
 	}
 
@@ -182,4 +183,22 @@ func testList(assert *require.Assertions, op *opendal.Operator) {
 	assert.Equal(expectedPaths, paths)
 
 	assert.Nil(op.Delete(dir))
+}
+
+func testReader(assert *require.Assertions, op *opendal.Operator) {
+	uuid := uuid.NewString()
+	path := fmt.Sprintf("%s/path", uuid)
+	data := []byte(uuid)
+
+	err := op.Write(path, data)
+	assert.Nil(err)
+
+	reader, err := op.Reader(path)
+	assert.Nil(err)
+	buf, size, err := reader.Read(uint(len(data)))
+	assert.Nil(err)
+	assert.Equal(data, buf)
+	assert.Equal(uint(len(buf)), size)
+
+	assert.Nil(op.Delete(path))
 }

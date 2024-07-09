@@ -115,4 +115,8 @@ var withCFuncs = []withCFunc{
 	withEntryName,
 	withEntryPath,
 	withEntryFree,
+
+	withOperatorReader,
+	withReaderRead,
+	withReaderFree,
 }

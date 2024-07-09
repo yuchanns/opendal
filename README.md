@@ -18,15 +18,16 @@ CGO_ENABLE=0 GOMAXPROCS=1 go test -v -run TestBehavior
 - [x] OperatorInfo
 - [x] Stat
     - [x] Metadata
-- [ ] Reader
+- [ ] Exist
+- [x] Reader
     - [x] Read
-    - [ ] ReaderRead
+    - [x] ReaderRead
 - [x] Write
 - [x] Delete
 - [x] CreateDir
 - [ ] Lister
     - [x] Entry
-    - [ ] Metadata
+    - [ ] Metadata -- Need support from the C binding
 - [ ] Copy
 - [ ] Rename
 

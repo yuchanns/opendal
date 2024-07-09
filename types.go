@@ -64,6 +64,24 @@ var (
 		}[0],
 	}
 
+	typeResultOperatorReader = ffi.Type{
+		Type: ffi.Struct,
+		Elements: &[]*ffi.Type{
+			&ffi.TypePointer,
+			&ffi.TypePointer,
+			nil,
+		}[0],
+	}
+
+	typeResultReaderRead = ffi.Type{
+		Type: ffi.Struct,
+		Elements: &[]*ffi.Type{
+			&ffi.TypePointer,
+			&ffi.TypePointer,
+			nil,
+		}[0],
+	}
+
 	typeCapability = ffi.Type{
 		Type: ffi.Struct,
 		Elements: &[]*ffi.Type{
@@ -158,6 +176,20 @@ type opendalOperator struct {
 
 type resultRead struct {
 	data  *opendalBytes
+	error *opendalError
+}
+
+type opendalReader struct {
+	inner uintptr
+}
+
+type resultOperatorReader struct {
+	reader *opendalReader
+	error  *opendalError
+}
+
+type resultReaderRead struct {
+	size  uint
 	error *opendalError
 }
 

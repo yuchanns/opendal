@@ -93,7 +93,7 @@ func withMetaIsFile(ctx context.Context, libopendal uintptr) (newCtx context.Con
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypeUint32,
+		&ffi.TypeUint8,
 		&ffi.TypePointer,
 	); status != ffi.OK {
 		err = errors.New(status.String())
@@ -104,7 +104,7 @@ func withMetaIsFile(ctx context.Context, libopendal uintptr) (newCtx context.Con
 		return
 	}
 	var cFn metaIsFile = func(m *opendalMetadata) bool {
-		var result uint32
+		var result uint8
 		ffi.Call(
 			&cif, fn,
 			unsafe.Pointer(&result),
@@ -124,7 +124,7 @@ func withMetaIsDir(ctx context.Context, libopendal uintptr) (newCtx context.Cont
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
 		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypeUint32,
+		&ffi.TypeUint8,
 		&ffi.TypePointer,
 	); status != ffi.OK {
 		err = errors.New(status.String())
@@ -135,7 +135,7 @@ func withMetaIsDir(ctx context.Context, libopendal uintptr) (newCtx context.Cont
 		return
 	}
 	var cFn metaIsDir = func(m *opendalMetadata) bool {
-		var result uint32
+		var result uint8
 		ffi.Call(
 			&cif, fn,
 			unsafe.Pointer(&result),
