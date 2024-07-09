@@ -28,6 +28,6 @@ CGO_ENABLE=0 GOMAXPROCS=1 go test -v -run TestBehavior
 - [ ] Lister
     - [x] Entry
     - [ ] Metadata -- Need support from the C binding
-- [ ] Copy
-- [ ] Rename
+- [x] Copy
+- [x] Rename
 

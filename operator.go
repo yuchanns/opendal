@@ -10,6 +10,16 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+func (op *Operator) Copy(src, dest string) error {
+	cp := getCFunc[operatorCopy](op.ctx, symOperatorCopy)
+	return cp(op.inner, src, dest)
+}
+
+func (op *Operator) Rename(src, dest string) error {
+	rename := getCFunc[operatorRename](op.ctx, symOperatorRename)
+	return rename(op.inner, src, dest)
+}
+
 func newOperator(ctx context.Context, libopendal uintptr, scheme Schemer, opts *operatorOptions) (op *opendalOperator, err error) {
 	var cif ffi.Cif
 	if status := ffi.PrepCif(
@@ -132,5 +142,87 @@ func operatorOptionsFree(libopendal uintptr, opts *operatorOptions) (err error) 
 		return err
 	}
 	ffi.Call(&cif, fn, nil, unsafe.Pointer(&opts))
+	return
+}
+
+const symOperatorCopy = "opendal_operator_copy"
+
+type operatorCopy func(op *opendalOperator, src, dest string) (err error)
+
+func withOperatorCopy(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(
+		&cif, ffi.DefaultAbi, 3,
+		&ffi.TypePointer,
+		&ffi.TypePointer,
+		&ffi.TypePointer,
+		&ffi.TypePointer,
+	); status != ffi.OK {
+		err = errors.New(status.String())
+		return
+	}
+	fn, err := purego.Dlsym(libopendal, symOperatorCopy)
+	if err != nil {
+		return
+	}
+	var cFn operatorCopy = func(op *opendalOperator, src, dest string) error {
+		var (
+			byteSrc  *byte
+			byteDest *byte
+		)
+		byteSrc, err = unix.BytePtrFromString(src)
+		if err != nil {
+			return err
+		}
+		byteDest, err = unix.BytePtrFromString(dest)
+		if err != nil {
+			return err
+		}
+		var err *opendalError
+		ffi.Call(&cif, fn, unsafe.Pointer(&err), unsafe.Pointer(&op), unsafe.Pointer(&byteSrc), unsafe.Pointer(&byteDest))
+		return parseError(ctx, err)
+	}
+	newCtx = context.WithValue(ctx, symOperatorCopy, cFn)
+	return
+}
+
+const symOperatorRename = "opendal_operator_rename"
+
+type operatorRename func(op *opendalOperator, src, dest string) (err error)
+
+func withOperatorRename(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	var cif ffi.Cif
+	if status := ffi.PrepCif(
+		&cif, ffi.DefaultAbi, 3,
+		&ffi.TypePointer,
+		&ffi.TypePointer,
+		&ffi.TypePointer,
+		&ffi.TypePointer,
+	); status != ffi.OK {
+		err = errors.New(status.String())
+		return
+	}
+	fn, err := purego.Dlsym(libopendal, symOperatorRename)
+	if err != nil {
+		return
+	}
+	var cFn operatorRename = func(op *opendalOperator, src, dest string) error {
+		var (
+			byteSrc  *byte
+			byteDest *byte
+		)
+		byteSrc, err = unix.BytePtrFromString(src)
+		if err != nil {
+			return err
+		}
+		byteDest, err = unix.BytePtrFromString(dest)
+		if err != nil {
+			return err
+		}
+		var err *opendalError
+		ffi.Call(&cif, fn, unsafe.Pointer(&err), unsafe.Pointer(&op), unsafe.Pointer(&byteSrc), unsafe.Pointer(&byteDest))
+		return parseError(ctx, err)
+	}
+	newCtx = context.WithValue(ctx, symOperatorRename, cFn)
 	return
 }

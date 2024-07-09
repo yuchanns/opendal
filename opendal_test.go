@@ -31,6 +31,7 @@ func TestBehavior(t *testing.T) {
 			testWrite,
 			testList,
 			testReader,
+			testCopy,
 		)
 	}
 
@@ -210,4 +211,44 @@ func testReader(assert *require.Assertions, op *opendal.Operator) {
 	assert.Equal(uint(len(buf)), size)
 
 	assert.Nil(op.Delete(path))
+}
+
+func testCopy(assert *require.Assertions, op *opendal.Operator) {
+	uuid := uuid.NewString()
+	pathA := fmt.Sprintf("%s/pathA", uuid)
+	pathB := fmt.Sprintf("%s/pathB", uuid)
+	data := []byte(uuid)
+
+	err := op.Write(pathA, data)
+	assert.Nil(err)
+
+	assert.Nil(op.Copy(pathA, pathB))
+	result, err := op.Read(pathB)
+	assert.Nil(err)
+	assert.Equal(data, result)
+
+	assert.Nil(op.Delete(pathA))
+	assert.Nil(op.Delete(pathB))
+}
+
+func testRename(assert *require.Assertions, op *opendal.Operator) {
+	uuid := uuid.NewString()
+	pathA := fmt.Sprintf("%s/pathA", uuid)
+	pathB := fmt.Sprintf("%s/pathB", uuid)
+	data := []byte(uuid)
+
+	err := op.Write(pathA, data)
+	assert.Nil(err)
+
+	assert.Nil(op.Rename(pathA, pathB))
+
+	exist, err := op.IsExist(pathA)
+	assert.Nil(err)
+	assert.False(exist)
+
+	result, err := op.Read(pathB)
+	assert.Nil(err)
+	assert.Equal(data, result)
+
+	assert.Nil(op.Delete(pathB))
 }
