@@ -9,7 +9,7 @@ import (
 )
 
 func (op *Operator) Stat(path string) (*Metadata, error) {
-	stat := getCFunc[operatorStat](op.ctx, symOperatorStat)
+	stat := getFFI[operatorStat](op.ctx, symOperatorStat)
 	meta, err := stat(op.inner, path)
 	if err != nil {
 		return nil, err
@@ -18,7 +18,7 @@ func (op *Operator) Stat(path string) (*Metadata, error) {
 }
 
 func (op *Operator) IsExist(path string) (bool, error) {
-	isExist := getCFunc[operatorIsExist](op.ctx, symOperatorIsExist)
+	isExist := getFFI[operatorIsExist](op.ctx, symOperatorIsExist)
 	return isExist(op.inner, path)
 }
 

@@ -9,12 +9,12 @@ import (
 )
 
 func (o *Operator) Write(path string, data []byte) error {
-	write := getCFunc[operatorWrite](o.ctx, symOperatorWrite)
+	write := getFFI[operatorWrite](o.ctx, symOperatorWrite)
 	return write(o.inner, path, data)
 }
 
 func (o *Operator) CreateDir(path string) error {
-	createDir := getCFunc[operatorCreateDir](o.ctx, symOperatorCreateDir)
+	createDir := getFFI[operatorCreateDir](o.ctx, symOperatorCreateDir)
 	return createDir(o.inner, path)
 }
 

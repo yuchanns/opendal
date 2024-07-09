@@ -10,7 +10,7 @@ import (
 )
 
 func (o *Operator) List(path string) (*Lister, error) {
-	list := getCFunc[operatorList](o.ctx, symOperatorList)
+	list := getFFI[operatorList](o.ctx, symOperatorList)
 	inner, err := list(o.inner, path)
 	if err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func (o *Operator) List(path string) (*Lister, error) {
 		ctx:   o.ctx,
 	}
 	runtime.SetFinalizer(lister, func(_ *Lister) {
-		free := getCFunc[listerFree](o.ctx, symListerFree)
+		free := getFFI[listerFree](o.ctx, symListerFree)
 		free(inner)
 	})
 	return lister, nil
@@ -33,7 +33,7 @@ type Lister struct {
 }
 
 func (l *Lister) Next() bool {
-	next := getCFunc[listerNext](l.ctx, symListerNext)
+	next := getFFI[listerNext](l.ctx, symListerNext)
 	inner, err := next(l.inner)
 	if inner == nil && err == nil {
 		l.entry = nil
@@ -47,7 +47,7 @@ func (l *Lister) Next() bool {
 	}
 
 	runtime.SetFinalizer(entry, func(_ *Entry) {
-		free := getCFunc[entryFree](l.ctx, symEntryFree)
+		free := getFFI[entryFree](l.ctx, symEntryFree)
 		free(inner)
 	})
 
@@ -70,12 +70,12 @@ func (e *Entry) Error() error {
 }
 
 func (e *Entry) Name() string {
-	name := getCFunc[entryName](e.ctx, symEntryName)
+	name := getFFI[entryName](e.ctx, symEntryName)
 	return name(e.inner)
 }
 
 func (e *Entry) Path() string {
-	path := getCFunc[entryPath](e.ctx, symEntryPath)
+	path := getFFI[entryPath](e.ctx, symEntryPath)
 	return path(e.inner)
 }
 

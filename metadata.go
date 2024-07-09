@@ -21,29 +21,29 @@ func newMetadata(ctx context.Context, inner *opendalMetadata) *Metadata {
 		inner: inner,
 	}
 	runtime.SetFinalizer(m, func(_ *Metadata) {
-		free := getCFunc[metaFree](ctx, symMetadataFree)
+		free := getFFI[metaFree](ctx, symMetadataFree)
 		free(inner)
 	})
 	return m
 }
 
 func (m *Metadata) ContentLength() uint64 {
-	length := getCFunc[metaContentLength](m.ctx, symMetadataContentLength)
+	length := getFFI[metaContentLength](m.ctx, symMetadataContentLength)
 	return length(m.inner)
 }
 
 func (m *Metadata) IsFile() bool {
-	isFile := getCFunc[metaIsFile](m.ctx, symMetadataIsFile)
+	isFile := getFFI[metaIsFile](m.ctx, symMetadataIsFile)
 	return isFile(m.inner)
 }
 
 func (m *Metadata) IsDir() bool {
-	isDir := getCFunc[metaIsDir](m.ctx, symMetadataIsDir)
+	isDir := getFFI[metaIsDir](m.ctx, symMetadataIsDir)
 	return isDir(m.inner)
 }
 
 func (m *Metadata) LastModified() time.Time {
-	lastModifiedMs := getCFunc[metaLastModified](m.ctx, symMetadataLastModified)
+	lastModifiedMs := getFFI[metaLastModified](m.ctx, symMetadataLastModified)
 	ms := lastModifiedMs(m.inner)
 	if ms == -1 {
 		var zeroTime time.Time

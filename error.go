@@ -54,7 +54,7 @@ func parseError(ctx context.Context, err *opendalError) error {
 	if err == nil {
 		return nil
 	}
-	free := getCFunc[errorFree](ctx, symErrorFree)
+	free := getFFI[errorFree](ctx, symErrorFree)
 	defer free(err)
 	return &Error{
 		code:    ErrorCode(err.code),

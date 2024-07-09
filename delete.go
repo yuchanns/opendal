@@ -9,7 +9,7 @@ import (
 )
 
 func (o *Operator) Delete(path string) error {
-	delete := getCFunc[operatorDelete](o.ctx, symOperatorDelete)
+	delete := getFFI[operatorDelete](o.ctx, symOperatorDelete)
 	return delete(o.inner, path)
 }
 

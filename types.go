@@ -29,7 +29,7 @@ var (
 		Type: ffi.Struct,
 		Elements: &[]*ffi.Type{
 			&ffi.TypePointer,
-			&ffi.TypeUint64,
+			&ffi.TypePointer,
 			nil,
 		}[0],
 	}

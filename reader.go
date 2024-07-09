@@ -10,7 +10,7 @@ import (
 )
 
 func (o *Operator) Read(path string) ([]byte, error) {
-	read := getCFunc[operatorRead](o.ctx, symOperatorRead)
+	read := getFFI[operatorRead](o.ctx, symOperatorRead)
 	bytes, err := read(o.inner, path)
 	if err != nil {
 		return nil, err
@@ -18,7 +18,7 @@ func (o *Operator) Read(path string) ([]byte, error) {
 
 	data := parseBytes(bytes)
 	if len(data) > 0 {
-		free := getCFunc[bytesFree](o.ctx, symBytesFree)
+		free := getFFI[bytesFree](o.ctx, symBytesFree)
 		free(bytes)
 
 	}
@@ -26,7 +26,7 @@ func (o *Operator) Read(path string) ([]byte, error) {
 }
 
 func (o *Operator) Reader(path string) (*OperatorReader, error) {
-	getReader := getCFunc[operatorReader](o.ctx, symOperatorReader)
+	getReader := getFFI[operatorReader](o.ctx, symOperatorReader)
 	inner, err := getReader(o.inner, path)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func (o *Operator) Reader(path string) (*OperatorReader, error) {
 		ctx:   o.ctx,
 	}
 	runtime.SetFinalizer(reader, func(_ *OperatorReader) {
-		free := getCFunc[readerFree](o.ctx, symReaderFree)
+		free := getFFI[readerFree](o.ctx, symReaderFree)
 		free(inner)
 	})
 	return reader, nil
@@ -48,7 +48,7 @@ type OperatorReader struct {
 }
 
 func (r *OperatorReader) Read(length uint) ([]byte, uint, error) {
-	read := getCFunc[readerRead](r.ctx, symReaderRead)
+	read := getFFI[readerRead](r.ctx, symReaderRead)
 	buf := make([]byte, length)
 	size, err := read(r.inner, buf)
 	return buf, size, err

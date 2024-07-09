@@ -2,11 +2,7 @@ package opendal
 
 import (
 	"context"
-	"errors"
 	"runtime"
-
-	"github.com/ebitengine/purego"
-	"github.com/jupiterrider/ffi"
 )
 
 type Schemer interface {
@@ -27,32 +23,28 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 	if err != nil {
 		return
 	}
-	libopendal, err := purego.Dlopen(path, purego.RTLD_LAZY|purego.RTLD_GLOBAL)
+
+	ctx, cancel, err := contextWithFFIs(path)
 	if err != nil {
 		return
 	}
-	ctx, err := contextWithCFuncs(libopendal)
-	if err != nil {
-		return
-	}
-	opt, err := newOperatorOptions(libopendal)
-	if err != nil {
-		purego.Dlclose(libopendal)
-		return
-	}
-	setOptions := getCFunc[operatorOptionsSet](ctx, symOperatorOptionSet)
+
+	options := getFFI[operatorOptionsNew](ctx, symOperatorOptionsNew)()
+	setOptions := getFFI[operatorOptionsSet](ctx, symOperatorOptionSet)
+	optionsFree := getFFI[operatorOptionsFree](ctx, symOperatorOptionsFree)
+
 	for key, value := range opts {
-		setOptions(opt, key, value)
+		setOptions(options, key, value)
 	}
 
-	inner, err := newOperator(ctx, libopendal, scheme, opt)
+	inner, err := getFFI[operatorNew](ctx, symOperatorNew)(scheme, options)
 	if err != nil {
-		operatorOptionsFree(libopendal, opt)
-		purego.Dlclose(libopendal)
+		optionsFree(options)
+		cancel()
 		return
 	}
 
-	defer operatorOptionsFree(libopendal, opt)
+	defer optionsFree(options)
 
 	op = &Operator{
 		inner: inner,
@@ -60,94 +52,9 @@ func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error)
 	}
 
 	runtime.SetFinalizer(op, func(_ *Operator) {
-		operatorFree(libopendal, inner)
-		purego.Dlclose(libopendal)
+		getFFI[operatorFree](ctx, symOperatorFree)(inner)
+		cancel()
 	})
 
 	return
-}
-
-func contextWithCFuncs(libopendal uintptr) (ctx context.Context, err error) {
-	ctx = context.Background()
-	for _, register := range withCFuncs {
-		ctx, err = register(ctx, libopendal)
-		if err != nil {
-			return
-		}
-	}
-	return
-}
-
-type withCFunc func(context.Context, uintptr) (context.Context, error)
-
-func getCFunc[T any](ctx context.Context, key string) T {
-	return ctx.Value(key).(T)
-}
-
-type ffiOpts struct {
-	sym    string
-	nArgs  uint32
-	rType  *ffi.Type
-	aTypes []*ffi.Type
-}
-
-func withFFI[T any](
-	ctx context.Context, libopendal uintptr, opts ffiOpts,
-	withFunc func(cif *ffi.Cif, fn uintptr) T,
-) (context.Context, error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, opts.nArgs,
-		opts.rType,
-		opts.aTypes...,
-	); status != ffi.OK {
-		return nil, errors.New(status.String())
-	}
-	fnPtr, err := purego.Dlsym(libopendal, opts.sym)
-	if err != nil {
-		return nil, err
-	}
-	return context.WithValue(ctx, opts.sym, withFunc(&cif, fnPtr)), nil
-}
-
-var withCFuncs = []withCFunc{
-	// free must be on top
-	withBytesFree,
-	withErrorFree,
-
-	withOperatorOptionsSet,
-
-	withOperatorInfoNew,
-	withOperatorInfoGetFullCapability,
-	withOperatorInfoGetNativeCapability,
-	withOperatorInfoGetScheme,
-	withOperatorInfoGetRoot,
-	withOperatorInfoGetName,
-	withOperatorInfoFree,
-
-	withOperatorCreateDir,
-	withOperatorRead,
-	withOperatorWrite,
-	withOperatorDelete,
-	withOperatorStat,
-	withOperatorIsExists,
-	withOperatorCopy,
-	withOperatorRename,
-
-	withMetaContentLength,
-	withMetaIsFile,
-	withMetaIsDir,
-	withMetaLastModified,
-	withMetaFree,
-
-	withOperatorList,
-	withListerNext,
-	withListerFree,
-	withEntryName,
-	withEntryPath,
-	withEntryFree,
-
-	withOperatorReader,
-	withReaderRead,
-	withReaderFree,
 }

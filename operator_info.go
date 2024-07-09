@@ -10,12 +10,12 @@ import (
 )
 
 func (op *Operator) Info() *OperatorInfo {
-	newInfo := getCFunc[operatorInfoNew](op.ctx, symOperatorInfoNew)
+	newInfo := getFFI[operatorInfoNew](op.ctx, symOperatorInfoNew)
 	inner := newInfo(op.inner)
 	info := &OperatorInfo{inner: inner, ctx: op.ctx}
 
 	runtime.SetFinalizer(info, func(_ *OperatorInfo) {
-		free := getCFunc[operatorInfoFree](op.ctx, symOperatorInfoFree)
+		free := getFFI[operatorInfoFree](op.ctx, symOperatorInfoFree)
 		free(inner)
 	})
 	return info
@@ -27,29 +27,29 @@ type OperatorInfo struct {
 }
 
 func (i *OperatorInfo) GetFullCapability() *Capability {
-	getCap := getCFunc[operatorInfoGetFullCapability](i.ctx, symOperatorInfoGetFullCapability)
+	getCap := getFFI[operatorInfoGetFullCapability](i.ctx, symOperatorInfoGetFullCapability)
 	cap := getCap(i.inner)
 	return &Capability{inner: cap}
 }
 
 func (i *OperatorInfo) GetNativeCapability() *Capability {
-	getCap := getCFunc[operatorInfoGetNativeCapability](i.ctx, symOperatorInfoGetNativeCapability)
+	getCap := getFFI[operatorInfoGetNativeCapability](i.ctx, symOperatorInfoGetNativeCapability)
 	cap := getCap(i.inner)
 	return &Capability{inner: cap}
 }
 
 func (i *OperatorInfo) GetScheme() string {
-	getScheme := getCFunc[operatorInfoGetScheme](i.ctx, symOperatorInfoGetScheme)
+	getScheme := getFFI[operatorInfoGetScheme](i.ctx, symOperatorInfoGetScheme)
 	return getScheme(i.inner)
 }
 
 func (i *OperatorInfo) GetRoot() string {
-	getRoot := getCFunc[operatorInfoGetRoot](i.ctx, symOperatorInfoGetRoot)
+	getRoot := getFFI[operatorInfoGetRoot](i.ctx, symOperatorInfoGetRoot)
 	return getRoot(i.inner)
 }
 
 func (i *OperatorInfo) GetName() string {
-	getName := getCFunc[operatorInfoGetName](i.ctx, symOperatorInfoGetName)
+	getName := getFFI[operatorInfoGetName](i.ctx, symOperatorInfoGetName)
 	return getName(i.inner)
 }
 

@@ -2,90 +2,87 @@ package opendal
 
 import (
 	"context"
-	"errors"
 	"unsafe"
 
-	"github.com/ebitengine/purego"
 	"github.com/jupiterrider/ffi"
 	"golang.org/x/sys/unix"
 )
 
 func (op *Operator) Copy(src, dest string) error {
-	cp := getCFunc[operatorCopy](op.ctx, symOperatorCopy)
+	cp := getFFI[operatorCopy](op.ctx, symOperatorCopy)
 	return cp(op.inner, src, dest)
 }
 
 func (op *Operator) Rename(src, dest string) error {
-	rename := getCFunc[operatorRename](op.ctx, symOperatorRename)
+	rename := getFFI[operatorRename](op.ctx, symOperatorRename)
 	return rename(op.inner, src, dest)
 }
 
-func newOperator(ctx context.Context, libopendal uintptr, scheme Schemer, opts *operatorOptions) (op *opendalOperator, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 2,
-		&typeResultOperatorNew,
-		&ffi.TypePointer,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		return nil, errors.New(status.String())
-	}
-	fn, err := purego.Dlsym(libopendal, "opendal_operator_new")
-	if err != nil {
-		return
-	}
-	var byteName *byte
-	byteName, err = unix.BytePtrFromString(scheme.Scheme())
-	if err != nil {
-		return
-	}
-	var result resultOperatorNew
-	ffi.Call(&cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(&opts))
-	if result.error != nil {
-		err = parseError(ctx, result.error)
-		return
-	}
-	op = result.op
-	return
+const symOperatorNew = "opendal_operator_new"
+
+type operatorNew func(scheme Schemer, opts *operatorOptions) (op *opendalOperator, err error)
+
+func withOperatorNew(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorNew,
+		nArgs:  2,
+		rType:  &typeResultOperatorNew,
+		aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorNew {
+		return func(scheme Schemer, opts *operatorOptions) (op *opendalOperator, err error) {
+			var byteName *byte
+			byteName, err = unix.BytePtrFromString(scheme.Scheme())
+			if err != nil {
+				return
+			}
+			var result resultOperatorNew
+			ffi.Call(cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&byteName), unsafe.Pointer(&opts))
+			if result.error != nil {
+				err = parseError(ctx, result.error)
+				return
+			}
+			op = result.op
+			return
+		}
+	})
 }
 
-func operatorFree(libopendal uintptr, op *opendalOperator) (err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypeVoid,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, "opendal_operator_free")
-	if err != nil {
-		return
-	}
-	ffi.Call(&cif, fn, nil, unsafe.Pointer(&op))
-	return
+const symOperatorFree = "opendal_operator_free"
+
+type operatorFree func(op *opendalOperator)
+
+func withOperatorFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorFree,
+		nArgs:  1,
+		rType:  &ffi.TypeVoid,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorFree {
+		return func(op *opendalOperator) {
+			ffi.Call(cif, fn, nil, unsafe.Pointer(&op))
+		}
+	})
 }
 
 type operatorOptions struct {
 	inner uintptr
 }
 
-func newOperatorOptions(libopendal uintptr) (opts *operatorOptions, err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 0,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		err = errors.New(status.String())
-		return
-	}
-	fn, err := purego.Dlsym(libopendal, "opendal_operator_options_new")
-	if err != nil {
-		return
-	}
-	ffi.Call(&cif, fn, unsafe.Pointer(&opts))
-	return
+const symOperatorOptionsNew = "opendal_operator_options_new"
+
+type operatorOptionsNew func() (opts *operatorOptions)
+
+func withOperatorOptionsNew(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:   symOperatorOptionsNew,
+		nArgs: 0,
+		rType: &ffi.TypePointer,
+	}, func(cif *ffi.Cif, fn uintptr) operatorOptionsNew {
+		return func() (opts *operatorOptions) {
+			ffi.Call(cif, fn, unsafe.Pointer(&opts))
+			return
+		}
+	})
 }
 
 const symOperatorOptionSet = "opendal_operator_options_set"
@@ -118,21 +115,21 @@ func withOperatorOptionsSet(ctx context.Context, libopendal uintptr) (newCtx con
 	})
 }
 
-func operatorOptionsFree(libopendal uintptr, opts *operatorOptions) (err error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, 1,
-		&ffi.TypeVoid,
-		&ffi.TypePointer,
-	); status != ffi.OK {
-		return errors.New(status.String())
-	}
-	fn, err := purego.Dlsym(libopendal, "opendal_operator_options_free")
-	if err != nil {
-		return err
-	}
-	ffi.Call(&cif, fn, nil, unsafe.Pointer(&opts))
-	return
+const symOperatorOptionsFree = "opendal_operator_options_free"
+
+type operatorOptionsFree func(opts *operatorOptions)
+
+func withOperatorOptionsFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
+	return withFFI(ctx, libopendal, ffiOpts{
+		sym:    symOperatorOptionsFree,
+		nArgs:  1,
+		rType:  &ffi.TypeVoid,
+		aTypes: []*ffi.Type{&ffi.TypePointer},
+	}, func(cif *ffi.Cif, fn uintptr) operatorOptionsFree {
+		return func(opts *operatorOptions) {
+			ffi.Call(cif, fn, nil, unsafe.Pointer(&opts))
+		}
+	})
 }
 
 const symOperatorCopy = "opendal_operator_copy"
