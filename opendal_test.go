@@ -110,11 +110,17 @@ func testStat(assert *require.Assertions, op *opendal.Operator) {
 	_, err = op.Stat("/not_exists")
 	assert.NotNil(err)
 	assert.Equal(int32(3), err.(*opendal.Error).Code())
+	exist, err := op.IsExist("/not_exists")
+	assert.Nil(err)
+	assert.False(exist)
 
 	meta, err := op.Stat(strings.TrimSuffix(dir, "/"))
 	assert.Nil(err)
 	assert.True(meta.IsDir())
 	assert.False(meta.IsFile())
+	exist, err = op.IsExist(strings.TrimSuffix(dir, "/"))
+	assert.Nil(err)
+	assert.True(exist)
 
 	meta, err = op.Stat(path)
 	assert.Nil(err)
@@ -122,6 +128,9 @@ func testStat(assert *require.Assertions, op *opendal.Operator) {
 	assert.False(meta.IsDir())
 	assert.True(meta.IsFile())
 	assert.False(meta.LastModified().IsZero())
+	exist, err = op.IsExist(path)
+	assert.Nil(err)
+	assert.True(exist)
 
 	assert.Nil(op.Delete(path))
 	assert.Nil(op.Delete(dir))

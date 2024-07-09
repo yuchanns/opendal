@@ -18,7 +18,7 @@ CGO_ENABLE=0 GOMAXPROCS=1 go test -v -run TestBehavior
 - [x] OperatorInfo
 - [x] Stat
     - [x] Metadata
-- [ ] Exist
+- [x] IsExist
 - [x] Reader
     - [x] Read
     - [x] ReaderRead

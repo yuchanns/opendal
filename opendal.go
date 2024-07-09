@@ -102,6 +102,7 @@ var withCFuncs = []withCFunc{
 	withOperatorWrite,
 	withOperatorDelete,
 	withOperatorStat,
+	withOperatorIsExists,
 
 	withMetaContentLength,
 	withMetaIsFile,

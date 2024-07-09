@@ -82,45 +82,54 @@ var (
 		}[0],
 	}
 
+	typeResultIsExist = ffi.Type{
+		Type: ffi.Struct,
+		Elements: &[]*ffi.Type{
+			&ffi.TypeUint8,
+			&ffi.TypePointer,
+			nil,
+		}[0],
+	}
+
 	typeCapability = ffi.Type{
 		Type: ffi.Struct,
 		Elements: &[]*ffi.Type{
-			&ffi.TypeUint32, // stat
-			&ffi.TypeUint32, // stat_with_if_match
-			&ffi.TypeUint32, // stat_with_if_none_match
-			&ffi.TypeUint32, // read
-			&ffi.TypeUint32, // read_with_if_match
-			&ffi.TypeUint32, // read_with_if_match_none
-			&ffi.TypeUint32, // read_with_override_cache_control
-			&ffi.TypeUint32, // read_with_override_content_disposition
-			&ffi.TypeUint32, // read_with_override_content_type
-			&ffi.TypeUint32, // write
-			&ffi.TypeUint32, // write_can_multi
-			&ffi.TypeUint32, // write_can_empty
-			&ffi.TypeUint32, // write_can_append
-			&ffi.TypeUint32, // write_with_content_type
-			&ffi.TypeUint32, // write_with_content_disposition
-			&ffi.TypeUint32, // write_with_cache_control
-			&ffi.TypeUint32, // write_multi_max_size
-			&ffi.TypeUint32, // write_multi_min_size
-			&ffi.TypeUint32, // write_multi_align_size
-			&ffi.TypeUint32, // write_total_max_size
-			&ffi.TypeUint32, // create_dir
-			&ffi.TypeUint32, // delete
-			&ffi.TypeUint32, // copy
-			&ffi.TypeUint32, // rename
-			&ffi.TypeUint32, // list
-			&ffi.TypeUint32, // list_with_limit
-			&ffi.TypeUint32, // list_with_start_after
-			&ffi.TypeUint32, // list_with_recursive
-			&ffi.TypeUint32, // presign
-			&ffi.TypeUint32, // presign_read
-			&ffi.TypeUint32, // presign_stat
-			&ffi.TypeUint32, // presign_write
-			&ffi.TypeUint32, // batch
-			&ffi.TypeUint32, // batch_delete
-			&ffi.TypeUint32, // batch_max_operations
-			&ffi.TypeUint32, // blocking
+			&ffi.TypeUint8,   // stat
+			&ffi.TypeUint8,   // stat_with_if_match
+			&ffi.TypeUint8,   // stat_with_if_none_match
+			&ffi.TypeUint8,   // read
+			&ffi.TypeUint8,   // read_with_if_match
+			&ffi.TypeUint8,   // read_with_if_match_none
+			&ffi.TypeUint8,   // read_with_override_cache_control
+			&ffi.TypeUint8,   // read_with_override_content_disposition
+			&ffi.TypeUint8,   // read_with_override_content_type
+			&ffi.TypeUint8,   // write
+			&ffi.TypeUint8,   // write_can_multi
+			&ffi.TypeUint8,   // write_can_empty
+			&ffi.TypeUint8,   // write_can_append
+			&ffi.TypeUint8,   // write_with_content_type
+			&ffi.TypeUint8,   // write_with_content_disposition
+			&ffi.TypeUint8,   // write_with_cache_control
+			&ffi.TypePointer, // write_multi_max_size
+			&ffi.TypePointer, // write_multi_min_size
+			&ffi.TypePointer, // write_multi_align_size
+			&ffi.TypePointer, // write_total_max_size
+			&ffi.TypeUint8,   // create_dir
+			&ffi.TypeUint8,   // delete
+			&ffi.TypeUint8,   // copy
+			&ffi.TypeUint8,   // rename
+			&ffi.TypeUint8,   // list
+			&ffi.TypeUint8,   // list_with_limit
+			&ffi.TypeUint8,   // list_with_start_after
+			&ffi.TypeUint8,   // list_with_recursive
+			&ffi.TypeUint8,   // presign
+			&ffi.TypeUint8,   // presign_read
+			&ffi.TypeUint8,   // presign_stat
+			&ffi.TypeUint8,   // presign_write
+			&ffi.TypeUint8,   // batch
+			&ffi.TypeUint8,   // batch_delete
+			&ffi.TypePointer, // batch_max_operations
+			&ffi.TypeUint8,   // blocking
 			nil,
 		}[0],
 	}
@@ -191,6 +200,11 @@ type resultOperatorReader struct {
 type resultReaderRead struct {
 	size  uint
 	error *opendalError
+}
+
+type resultIsExist struct {
+	is_exist uint8
+	error    *opendalError
 }
 
 type resultStat struct {
