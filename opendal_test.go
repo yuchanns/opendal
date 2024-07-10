@@ -116,14 +116,6 @@ func genBytesWithRange(min, max uint) ([]byte, uint) {
 	return content, size
 }
 
-func genBytes(cap *opendal.Capability) ([]byte, uint) {
-	maxSize := cap.WriteTotalMaxSize()
-	if maxSize == 0 {
-		maxSize = 4 * 1024 * 1024
-	}
-	return genBytesWithRange(1, maxSize)
-}
-
 type fixture struct {
 	op   *opendal.Operator
 	lock *sync.Mutex
@@ -161,7 +153,6 @@ func (f *fixture) NewFileWithPath(path string) (string, []byte, uint) {
 	if maxSize == 0 {
 		maxSize = 4 * 1024 * 1024
 	}
-
 	return f.NewFileWithRange(uuid.NewString(), 1, maxSize)
 }
 
@@ -173,6 +164,9 @@ func (f *fixture) NewFileWithRange(path string, min, max uint) (string, []byte, 
 }
 
 func (f *fixture) Cleanup(assert *require.Assertions) {
+	if !f.op.Info().GetFullCapability().Delete() {
+		return
+	}
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
