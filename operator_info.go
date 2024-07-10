@@ -205,129 +205,136 @@ const symOperatorInfoNew = "opendal_operator_info_new"
 
 type operatorInfoNew func(op *opendalOperator) *opendalOperatorInfo
 
-func withOperatorInfoNew(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorInfoNew,
-		nArgs:  1,
-		rType:  &ffi.TypePointer,
-		aTypes: []*ffi.Type{&ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorInfoNew {
-		return func(op *opendalOperator) *opendalOperatorInfo {
-			var result *opendalOperatorInfo
-			ffi.Call(cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&op))
-			return result
-		}
-	})
-}
+var withOperatorInfoNew = withFFI(ffiOpts{
+	sym:    symOperatorInfoNew,
+	nArgs:  1,
+	rType:  &ffi.TypePointer,
+	aTypes: []*ffi.Type{&ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorInfoNew {
+	return func(op *opendalOperator) *opendalOperatorInfo {
+		var result *opendalOperatorInfo
+		ffiCall(
+			unsafe.Pointer(&result),
+			unsafe.Pointer(&op),
+		)
+		return result
+	}
+})
 
 const symOperatorInfoFree = "opendal_operator_info_free"
 
 type operatorInfoFree func(info *opendalOperatorInfo)
 
-func withOperatorInfoFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorInfoFree,
-		nArgs:  1,
-		rType:  &ffi.TypeVoid,
-		aTypes: []*ffi.Type{&ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorInfoFree {
-		return func(info *opendalOperatorInfo) {
-			ffi.Call(cif, fn, nil, unsafe.Pointer(&info))
-		}
-	})
-}
+var withOperatorInfoFree = withFFI(ffiOpts{
+	sym:    symOperatorInfoFree,
+	nArgs:  1,
+	rType:  &ffi.TypeVoid,
+	aTypes: []*ffi.Type{&ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorInfoFree {
+	return func(info *opendalOperatorInfo) {
+		ffiCall(
+			nil,
+			unsafe.Pointer(&info),
+		)
+	}
+})
 
 const symOperatorInfoGetFullCapability = "opendal_operator_info_get_full_capability"
 
 type operatorInfoGetFullCapability func(info *opendalOperatorInfo) *opendalCapability
 
-func withOperatorInfoGetFullCapability(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorInfoGetFullCapability,
-		nArgs:  1,
-		rType:  &typeCapability,
-		aTypes: []*ffi.Type{&ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetFullCapability {
-		return func(info *opendalOperatorInfo) *opendalCapability {
-			var cap opendalCapability
-			ffi.Call(cif, fn, unsafe.Pointer(&cap), unsafe.Pointer(&info))
-			return &cap
-		}
-	})
-}
+var withOperatorInfoGetFullCapability = withFFI(ffiOpts{
+	sym:    symOperatorInfoGetFullCapability,
+	nArgs:  1,
+	rType:  &typeCapability,
+	aTypes: []*ffi.Type{&ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorInfoGetFullCapability {
+	return func(info *opendalOperatorInfo) *opendalCapability {
+		var cap opendalCapability
+		ffiCall(
+			unsafe.Pointer(&cap),
+			unsafe.Pointer(&info),
+		)
+		return &cap
+	}
+})
 
 const symOperatorInfoGetNativeCapability = "opendal_operator_info_get_native_capability"
 
 type operatorInfoGetNativeCapability func(info *opendalOperatorInfo) *opendalCapability
 
-func withOperatorInfoGetNativeCapability(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorInfoGetNativeCapability,
-		nArgs:  1,
-		rType:  &typeCapability,
-		aTypes: []*ffi.Type{&ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetNativeCapability {
-		return func(info *opendalOperatorInfo) *opendalCapability {
-			var cap opendalCapability
-			ffi.Call(cif, fn, unsafe.Pointer(&cap), unsafe.Pointer(&info))
-			return &cap
-		}
-	})
-}
+var withOperatorInfoGetNativeCapability = withFFI(ffiOpts{
+	sym:    symOperatorInfoGetNativeCapability,
+	nArgs:  1,
+	rType:  &typeCapability,
+	aTypes: []*ffi.Type{&ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorInfoGetNativeCapability {
+	return func(info *opendalOperatorInfo) *opendalCapability {
+		var cap opendalCapability
+		ffiCall(
+			unsafe.Pointer(&cap),
+			unsafe.Pointer(&info),
+		)
+		return &cap
+	}
+})
 
 const symOperatorInfoGetScheme = "opendal_operator_info_get_scheme"
 
 type operatorInfoGetScheme func(info *opendalOperatorInfo) string
 
-func withOperatorInfoGetScheme(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorInfoGetScheme,
-		nArgs:  1,
-		rType:  &ffi.TypePointer,
-		aTypes: []*ffi.Type{&ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetScheme {
-		return func(info *opendalOperatorInfo) string {
-			var bytePtr *byte
-			ffi.Call(cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
-			return unix.BytePtrToString(bytePtr)
-		}
-	})
-}
+var withOperatorInfoGetScheme = withFFI(ffiOpts{
+	sym:    symOperatorInfoGetScheme,
+	nArgs:  1,
+	rType:  &ffi.TypePointer,
+	aTypes: []*ffi.Type{&ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorInfoGetScheme {
+	return func(info *opendalOperatorInfo) string {
+		var bytePtr *byte
+		ffiCall(
+			unsafe.Pointer(&bytePtr),
+			unsafe.Pointer(&info),
+		)
+		return unix.BytePtrToString(bytePtr)
+	}
+})
 
 const symOperatorInfoGetRoot = "opendal_operator_info_get_root"
 
-type operatorInfoGetRoot func(self *opendalOperatorInfo) string
+type operatorInfoGetRoot func(info *opendalOperatorInfo) string
 
-func withOperatorInfoGetRoot(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorInfoGetRoot,
-		nArgs:  1,
-		rType:  &ffi.TypePointer,
-		aTypes: []*ffi.Type{&ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetRoot {
-		return func(info *opendalOperatorInfo) string {
-			var bytePtr *byte
-			ffi.Call(cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
-			return unix.BytePtrToString(bytePtr)
-		}
-	})
-}
+var withOperatorInfoGetRoot = withFFI(ffiOpts{
+	sym:    symOperatorInfoGetRoot,
+	nArgs:  1,
+	rType:  &ffi.TypePointer,
+	aTypes: []*ffi.Type{&ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorInfoGetRoot {
+	return func(info *opendalOperatorInfo) string {
+		var bytePtr *byte
+		ffiCall(
+			unsafe.Pointer(&bytePtr),
+			unsafe.Pointer(&info),
+		)
+		return unix.BytePtrToString(bytePtr)
+	}
+})
 
 const symOperatorInfoGetName = "opendal_operator_info_get_name"
 
-type operatorInfoGetName func(self *opendalOperatorInfo) string
+type operatorInfoGetName func(info *opendalOperatorInfo) string
 
-func withOperatorInfoGetName(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorInfoGetName,
-		nArgs:  1,
-		rType:  &ffi.TypePointer,
-		aTypes: []*ffi.Type{&ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorInfoGetName {
-		return func(info *opendalOperatorInfo) string {
-			var bytePtr *byte
-			ffi.Call(cif, fn, unsafe.Pointer(&bytePtr), unsafe.Pointer(&info))
-			return unix.BytePtrToString(bytePtr)
-		}
-	})
-}
+var withOperatorInfoGetName = withFFI(ffiOpts{
+	sym:    symOperatorInfoGetName,
+	nArgs:  1,
+	rType:  &ffi.TypePointer,
+	aTypes: []*ffi.Type{&ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorInfoGetName {
+	return func(info *opendalOperatorInfo) string {
+		var bytePtr *byte
+		ffiCall(
+			unsafe.Pointer(&bytePtr),
+			unsafe.Pointer(&info),
+		)
+		return unix.BytePtrToString(bytePtr)
+	}
+})

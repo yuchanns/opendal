@@ -58,105 +58,99 @@ const symOperatorRead = "opendal_operator_read"
 
 type operatorRead func(op *opendalOperator, path string) (*opendalBytes, error)
 
-func withOperatorRead(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorRead,
-		nArgs:  2,
-		rType:  &typeResultRead,
-		aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorRead {
-		return func(op *opendalOperator, path string) (*opendalBytes, error) {
-			bytePath, err := unix.BytePtrFromString(path)
-			if err != nil {
-				return nil, err
-			}
-			var result resultRead
-			ffi.Call(
-				cif, fn,
-				unsafe.Pointer(&result),
-				unsafe.Pointer(&op),
-				unsafe.Pointer(&bytePath),
-			)
-			return result.data, parseError(ctx, result.error)
+var withOperatorRead = withFFI(ffiOpts{
+	sym:    symOperatorRead,
+	nArgs:  2,
+	rType:  &typeResultRead,
+	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorRead {
+	return func(op *opendalOperator, path string) (*opendalBytes, error) {
+		bytePath, err := unix.BytePtrFromString(path)
+		if err != nil {
+			return nil, err
 		}
-	})
-}
+		var result resultRead
+		ffiCall(
+			unsafe.Pointer(&result),
+			unsafe.Pointer(&op),
+			unsafe.Pointer(&bytePath),
+		)
+		return result.data, parseError(ctx, result.error)
+	}
+})
 
 const symOperatorReader = "opendal_operator_reader"
 
 type operatorReader func(op *opendalOperator, path string) (*opendalReader, error)
 
-func withOperatorReader(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorReader,
-		nArgs:  2,
-		rType:  &typeResultOperatorReader,
-		aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorReader {
-		return func(op *opendalOperator, path string) (*opendalReader, error) {
-			bytePath, err := unix.BytePtrFromString(path)
-			if err != nil {
-				return nil, err
-			}
-			var result resultOperatorReader
-			ffi.Call(
-				cif, fn,
-				unsafe.Pointer(&result),
-				unsafe.Pointer(&op),
-				unsafe.Pointer(&bytePath),
-			)
-			if result.error != nil {
-				return nil, parseError(ctx, result.error)
-			}
-			return result.reader, nil
+var withOperatorReader = withFFI(ffiOpts{
+	sym:    symOperatorReader,
+	nArgs:  2,
+	rType:  &typeResultOperatorReader,
+	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorReader {
+	return func(op *opendalOperator, path string) (*opendalReader, error) {
+		bytePath, err := unix.BytePtrFromString(path)
+		if err != nil {
+			return nil, err
 		}
-	})
-}
+		var result resultOperatorReader
+		ffiCall(
+			unsafe.Pointer(&result),
+			unsafe.Pointer(&op),
+			unsafe.Pointer(&bytePath),
+		)
+		if result.error != nil {
+			return nil, parseError(ctx, result.error)
+		}
+		return result.reader, nil
+	}
+})
 
 const symReaderFree = "opendal_reader_free"
 
 type readerFree func(r *opendalReader)
 
-func withReaderFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symReaderFree,
-		nArgs:  1,
-		rType:  &ffi.TypeVoid,
-		aTypes: []*ffi.Type{&ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) readerFree {
-		return func(r *opendalReader) {
-			ffi.Call(
-				cif, fn,
-				nil,
-				unsafe.Pointer(&r),
-			)
-		}
-	})
-}
+var withReaderFree = withFFI(ffiOpts{
+	sym:    symReaderFree,
+	nArgs:  1,
+	rType:  &ffi.TypeVoid,
+	aTypes: []*ffi.Type{&ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) readerFree {
+	return func(r *opendalReader) {
+		ffiCall(
+			nil,
+			unsafe.Pointer(&r),
+		)
+	}
+})
 
 const symReaderRead = "opendal_reader_read"
 
 type readerRead func(r *opendalReader, buf []byte) (size uint, err error)
 
-func withReaderRead(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symReaderRead,
-		nArgs:  3,
-		rType:  &typeResultReaderRead,
-		aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer, &ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) readerRead {
-		return func(r *opendalReader, buf []byte) (size uint, err error) {
-			var length = len(buf)
-			if length == 0 {
-				return 0, nil
-			}
-			bytePtr := &buf[0]
-			var result resultReaderRead
-			ffi.Call(cif, fn, unsafe.Pointer(&result), unsafe.Pointer(&r), unsafe.Pointer(&bytePtr), unsafe.Pointer(&length))
-			if result.error != nil {
-				return 0, parseError(ctx, result.error)
-			}
-			return result.size, nil
+var withReaderRead = withFFI(ffiOpts{
+	sym:    symReaderRead,
+	nArgs:  3,
+	rType:  &typeResultReaderRead,
+	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer, &ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) readerRead {
+	return func(r *opendalReader, buf []byte) (size uint, err error) {
+		var length = len(buf)
+		if length == 0 {
+			return 0, nil
 		}
-	})
-}
+		bytePtr := &buf[0]
+		var result resultReaderRead
+		ffiCall(
+			unsafe.Pointer(&result),
+			unsafe.Pointer(&r),
+			unsafe.Pointer(&bytePtr),
+			unsafe.Pointer(&length),
+		)
+		if result.error != nil {
+			return 0, parseError(ctx, result.error)
+		}
+		return result.size, nil
+	}
+})

@@ -26,60 +26,54 @@ const symOperatorStat = "opendal_operator_stat"
 
 type operatorStat func(op *opendalOperator, path string) (*opendalMetadata, error)
 
-func withOperatorStat(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorStat,
-		nArgs:  2,
-		rType:  &typeResultStat,
-		aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorStat {
-		return func(op *opendalOperator, path string) (*opendalMetadata, error) {
-			bytePath, err := unix.BytePtrFromString(path)
-			if err != nil {
-				return nil, err
-			}
-			var result resultStat
-			ffi.Call(
-				cif, fn,
-				unsafe.Pointer(&result),
-				unsafe.Pointer(&op),
-				unsafe.Pointer(&bytePath),
-			)
-			if result.error != nil {
-				return nil, parseError(ctx, result.error)
-			}
-			return result.meta, nil
+var withOperatorStat = withFFI(ffiOpts{
+	sym:    symOperatorStat,
+	nArgs:  2,
+	rType:  &typeResultStat,
+	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorStat {
+	return func(op *opendalOperator, path string) (*opendalMetadata, error) {
+		bytePath, err := unix.BytePtrFromString(path)
+		if err != nil {
+			return nil, err
 		}
-	})
-}
+		var result resultStat
+		ffiCall(
+			unsafe.Pointer(&result),
+			unsafe.Pointer(&op),
+			unsafe.Pointer(&bytePath),
+		)
+		if result.error != nil {
+			return nil, parseError(ctx, result.error)
+		}
+		return result.meta, nil
+	}
+})
 
 const symOperatorIsExist = "opendal_operator_is_exist"
 
 type operatorIsExist func(op *opendalOperator, path string) (bool, error)
 
-func withOperatorIsExists(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symOperatorIsExist,
-		nArgs:  2,
-		rType:  &typeResultIsExist,
-		aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) operatorIsExist {
-		return func(op *opendalOperator, path string) (bool, error) {
-			bytePath, err := unix.BytePtrFromString(path)
-			if err != nil {
-				return false, err
-			}
-			var result resultIsExist
-			ffi.Call(
-				cif, fn,
-				unsafe.Pointer(&result),
-				unsafe.Pointer(&op),
-				unsafe.Pointer(&bytePath),
-			)
-			if result.error != nil {
-				return false, parseError(ctx, result.error)
-			}
-			return result.is_exist == 1, nil
+var withOperatorIsExists = withFFI(ffiOpts{
+	sym:    symOperatorIsExist,
+	nArgs:  2,
+	rType:  &typeResultIsExist,
+	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
+}, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorIsExist {
+	return func(op *opendalOperator, path string) (bool, error) {
+		bytePath, err := unix.BytePtrFromString(path)
+		if err != nil {
+			return false, err
 		}
-	})
-}
+		var result resultIsExist
+		ffiCall(
+			unsafe.Pointer(&result),
+			unsafe.Pointer(&op),
+			unsafe.Pointer(&bytePath),
+		)
+		if result.error != nil {
+			return false, parseError(ctx, result.error)
+		}
+		return result.is_exist == 1, nil
+	}
+})

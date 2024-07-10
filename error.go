@@ -83,19 +83,16 @@ type errorFree func(e *opendalError)
 
 const symErrorFree = "opendal_error_free"
 
-func withErrorFree(ctx context.Context, libopendal uintptr) (newCtx context.Context, err error) {
-	return withFFI(ctx, libopendal, ffiOpts{
-		sym:    symErrorFree,
-		nArgs:  1,
-		rType:  &ffi.TypeVoid,
-		aTypes: []*ffi.Type{&ffi.TypePointer},
-	}, func(cif *ffi.Cif, fn uintptr) errorFree {
-		return func(e *opendalError) {
-			ffi.Call(
-				cif, fn,
-				nil,
-				unsafe.Pointer(&e),
-			)
-		}
-	})
-}
+var withErrorFree = withFFI(ffiOpts{
+	sym:    symErrorFree,
+	nArgs:  1,
+	rType:  &ffi.TypeVoid,
+	aTypes: []*ffi.Type{&ffi.TypePointer},
+}, func(_ context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) errorFree {
+	return func(e *opendalError) {
+		ffiCall(
+			nil,
+			unsafe.Pointer(&e),
+		)
+	}
+})

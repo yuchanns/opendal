@@ -3,6 +3,7 @@ package opendal
 import (
 	"context"
 	"errors"
+	"unsafe"
 
 	"github.com/ebitengine/purego"
 	"github.com/jupiterrider/ffi"
@@ -42,22 +43,28 @@ type ffiOpts struct {
 }
 
 func withFFI[T any](
-	ctx context.Context, libopendal uintptr, opts ffiOpts,
-	withFunc func(cif *ffi.Cif, fn uintptr) T,
-) (context.Context, error) {
-	var cif ffi.Cif
-	if status := ffi.PrepCif(
-		&cif, ffi.DefaultAbi, opts.nArgs,
-		opts.rType,
-		opts.aTypes...,
-	); status != ffi.OK {
-		return nil, errors.New(status.String())
+	opts ffiOpts,
+	withFunc func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) T,
+) func(ctx context.Context, libopendal uintptr) (context.Context, error) {
+	return func(ctx context.Context, libopendal uintptr) (context.Context, error) {
+		var cif ffi.Cif
+		if status := ffi.PrepCif(
+			&cif, ffi.DefaultAbi, opts.nArgs,
+			opts.rType,
+			opts.aTypes...,
+		); status != ffi.OK {
+			return nil, errors.New(status.String())
+		}
+		fnPtr, err := purego.Dlsym(libopendal, opts.sym)
+		if err != nil {
+			return nil, err
+		}
+		return context.WithValue(ctx, opts.sym,
+			withFunc(ctx, func(rValue unsafe.Pointer, aValues ...unsafe.Pointer) {
+				ffi.Call(&cif, fnPtr, rValue, aValues...)
+			}),
+		), nil
 	}
-	fnPtr, err := purego.Dlsym(libopendal, opts.sym)
-	if err != nil {
-		return nil, err
-	}
-	return context.WithValue(ctx, opts.sym, withFunc(&cif, fnPtr)), nil
 }
 
 var withFFIs = []contextWithFFI{
