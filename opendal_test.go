@@ -32,6 +32,7 @@ func TestBehavior(t *testing.T) {
 	tests = append(tests, testsCopy(cap)...)
 	tests = append(tests, testsCreateDir(cap)...)
 	tests = append(tests, testsDelete(cap)...)
+	tests = append(tests, testsList(cap)...)
 
 	fixture := newFixture(op)
 
@@ -153,7 +154,7 @@ func (f *fixture) NewFileWithPath(path string) (string, []byte, uint) {
 	if maxSize == 0 {
 		maxSize = 4 * 1024 * 1024
 	}
-	return f.NewFileWithRange(uuid.NewString(), 1, maxSize)
+	return f.NewFileWithRange(path, 1, maxSize)
 }
 
 func (f *fixture) NewFileWithRange(path string, min, max uint) (string, []byte, uint) {

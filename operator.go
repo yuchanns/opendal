@@ -8,6 +8,21 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+func (op *Operator) Check() (err error) {
+	ds, err := op.List("/")
+	if err != nil {
+		return
+	}
+	if !ds.Next() {
+		return
+	}
+	err = ds.Entry().Error()
+	if err, ok := err.(*Error); ok && err.Code() == CodeNotFound {
+		return nil
+	}
+	return
+}
+
 func (op *Operator) Copy(src, dest string) error {
 	cp := getFFI[operatorCopy](op.ctx, symOperatorCopy)
 	return cp(op.inner, src, dest)
