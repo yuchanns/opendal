@@ -55,13 +55,13 @@ func withFFI[T any](
 		); status != ffi.OK {
 			return nil, errors.New(status.String())
 		}
-		fnPtr, err := purego.Dlsym(libopendal, opts.sym)
+		fn, err := purego.Dlsym(libopendal, opts.sym)
 		if err != nil {
 			return nil, err
 		}
 		return context.WithValue(ctx, opts.sym,
 			withFunc(ctx, func(rValue unsafe.Pointer, aValues ...unsafe.Pointer) {
-				ffi.Call(&cif, fnPtr, rValue, aValues...)
+				ffi.Call(&cif, fn, rValue, aValues...)
 			}),
 		), nil
 	}
