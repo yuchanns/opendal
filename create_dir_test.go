@@ -18,7 +18,7 @@ func testsCreateDir(cap *opendal.Capability) []behaviorTest {
 	}
 }
 
-func testCreateDir(assert *require.Assertions, op *opendal.Operator) {
+func testCreateDir(assert *require.Assertions, op *opendal.Operator, fixture *fixture) {
 	path := fmt.Sprintf("%s/", uuid.NewString())
 
 	assert.Nil(op.CreateDir(path))
@@ -30,7 +30,7 @@ func testCreateDir(assert *require.Assertions, op *opendal.Operator) {
 	assert.Nil(op.Delete(path), "delete must succeed")
 }
 
-func testCreateDirExisting(assert *require.Assertions, op *opendal.Operator) {
+func testCreateDirExisting(assert *require.Assertions, op *opendal.Operator, fixture *fixture) {
 	path := fmt.Sprintf("%s/", uuid.NewString())
 
 	assert.Nil(op.CreateDir(path))

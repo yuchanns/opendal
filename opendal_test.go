@@ -9,17 +9,21 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/yuchanns/opendal-go-services/aliyun_drive"
 )
 
-type behaviorTest = func(assert *require.Assertions, op *opendal.Operator)
+type behaviorTest = func(assert *require.Assertions, op *opendal.Operator, fixture *fixture)
 
 func TestBehavior(t *testing.T) {
+	assert := require.New(t)
+
 	op, err := newOperator()
-	require.Nil(t, err)
+	assert.Nil(err)
 
 	cap := op.Info().GetFullCapability()
 
@@ -27,6 +31,13 @@ func TestBehavior(t *testing.T) {
 
 	tests = append(tests, testsCopy(cap)...)
 	tests = append(tests, testsCreateDir(cap)...)
+	tests = append(tests, testsDelete(cap)...)
+
+	fixture := newFixture(op)
+
+	t.Cleanup(func() {
+		fixture.Cleanup(assert)
+	})
 
 	for i := range tests {
 		test := tests[i]
@@ -41,7 +52,7 @@ func TestBehavior(t *testing.T) {
 			t.Parallel()
 			assert := require.New(t)
 
-			test(assert, op)
+			test(assert, op, fixture)
 		})
 	}
 }
@@ -111,4 +122,70 @@ func genBytes(cap *opendal.Capability) ([]byte, uint) {
 		maxSize = 4 * 1024 * 1024
 	}
 	return genBytesWithRange(1, maxSize)
+}
+
+type fixture struct {
+	op   *opendal.Operator
+	lock *sync.Mutex
+
+	paths []string
+}
+
+func newFixture(op *opendal.Operator) *fixture {
+	return &fixture{
+		op:   op,
+		lock: &sync.Mutex{},
+	}
+}
+
+func (f *fixture) NewDirPath() string {
+	path := fmt.Sprintf("%s/", uuid.NewString())
+	f.PushPath(path)
+
+	return path
+}
+
+func (f *fixture) NewFilePath() string {
+	path := uuid.NewString()
+	f.PushPath(path)
+
+	return path
+}
+
+func (f *fixture) NewFile() (string, []byte, uint) {
+	return f.NewFileWithPath(uuid.NewString())
+}
+
+func (f *fixture) NewFileWithPath(path string) (string, []byte, uint) {
+	maxSize := f.op.Info().GetFullCapability().WriteTotalMaxSize()
+	if maxSize == 0 {
+		maxSize = 4 * 1024 * 1024
+	}
+
+	return f.NewFileWithRange(uuid.NewString(), 1, maxSize)
+}
+
+func (f *fixture) NewFileWithRange(path string, min, max uint) (string, []byte, uint) {
+	f.PushPath(path)
+
+	content, size := genBytesWithRange(min, max)
+	return path, content, size
+}
+
+func (f *fixture) Cleanup(assert *require.Assertions) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
+	for _, path := range f.paths {
+		assert.Nil(f.op.Delete(path), "delete must succeed: %s", path)
+	}
+}
+
+func (f *fixture) PushPath(path string) string {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+
+	f.paths = append(f.paths, path)
+
+	return path
 }
