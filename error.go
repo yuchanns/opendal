@@ -85,7 +85,6 @@ const symErrorFree = "opendal_error_free"
 
 var withErrorFree = withFFI(ffiOpts{
 	sym:    symErrorFree,
-	nArgs:  1,
 	rType:  &ffi.TypeVoid,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(_ context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) errorFree {

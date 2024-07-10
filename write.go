@@ -24,7 +24,6 @@ type operatorWrite func(op *opendalOperator, path string, data []byte) error
 
 var withOperatorWrite = withFFI(ffiOpts{
 	sym:    symOperatorWrite,
-	nArgs:  3,
 	rType:  &ffi.TypePointer,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer, &typeBytes},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorWrite {
@@ -54,7 +53,6 @@ type operatorCreateDir func(op *opendalOperator, path string) error
 
 var withOperatorCreateDir = withFFI(ffiOpts{
 	sym:    symOperatorCreateDir,
-	nArgs:  2,
 	rType:  &ffi.TypePointer,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorCreateDir {

@@ -60,7 +60,6 @@ type operatorRead func(op *opendalOperator, path string) (*opendalBytes, error)
 
 var withOperatorRead = withFFI(ffiOpts{
 	sym:    symOperatorRead,
-	nArgs:  2,
 	rType:  &typeResultRead,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorRead {
@@ -85,7 +84,6 @@ type operatorReader func(op *opendalOperator, path string) (*opendalReader, erro
 
 var withOperatorReader = withFFI(ffiOpts{
 	sym:    symOperatorReader,
-	nArgs:  2,
 	rType:  &typeResultOperatorReader,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorReader {
@@ -113,7 +111,6 @@ type readerFree func(r *opendalReader)
 
 var withReaderFree = withFFI(ffiOpts{
 	sym:    symReaderFree,
-	nArgs:  1,
 	rType:  &ffi.TypeVoid,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) readerFree {
@@ -131,7 +128,6 @@ type readerRead func(r *opendalReader, buf []byte) (size uint, err error)
 
 var withReaderRead = withFFI(ffiOpts{
 	sym:    symReaderRead,
-	nArgs:  3,
 	rType:  &typeResultReaderRead,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) readerRead {

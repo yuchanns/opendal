@@ -24,7 +24,6 @@ type operatorNew func(scheme Schemer, opts *operatorOptions) (op *opendalOperato
 
 var withOperatorNew = withFFI(ffiOpts{
 	sym:    symOperatorNew,
-	nArgs:  2,
 	rType:  &typeResultOperatorNew,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorNew {
@@ -55,7 +54,6 @@ type operatorFree func(op *opendalOperator)
 
 var withOperatorFree = withFFI(ffiOpts{
 	sym:    symOperatorFree,
-	nArgs:  1,
 	rType:  &ffi.TypeVoid,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(_ context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorFree {
@@ -77,7 +75,6 @@ type operatorOptionsNew func() (opts *operatorOptions)
 
 var withOperatorOptionsNew = withFFI(ffiOpts{
 	sym:   symOperatorOptionsNew,
-	nArgs: 0,
 	rType: &ffi.TypePointer,
 }, func(_ context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorOptionsNew {
 	return func() (opts *operatorOptions) {
@@ -92,7 +89,6 @@ type operatorOptionsSet func(opts *operatorOptions, key, value string) error
 
 var withOperatorOptionsSet = withFFI(ffiOpts{
 	sym:    symOperatorOptionSet,
-	nArgs:  3,
 	rType:  &ffi.TypeVoid,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer, &ffi.TypePointer},
 }, func(_ context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorOptionsSet {
@@ -125,7 +121,6 @@ type operatorOptionsFree func(opts *operatorOptions)
 
 var withOperatorOptionsFree = withFFI(ffiOpts{
 	sym:    symOperatorOptionsFree,
-	nArgs:  1,
 	rType:  &ffi.TypeVoid,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(_ context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorOptionsFree {
@@ -143,7 +138,6 @@ type operatorCopy func(op *opendalOperator, src, dest string) (err error)
 
 var withOperatorCopy = withFFI(ffiOpts{
 	sym:    symOperatorCopy,
-	nArgs:  3,
 	rType:  &ffi.TypePointer,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorCopy {
@@ -177,7 +171,6 @@ type operatorRename func(op *opendalOperator, src, dest string) (err error)
 
 var withOperatorRename = withFFI(ffiOpts{
 	sym:    symOperatorRename,
-	nArgs:  3,
 	rType:  &ffi.TypePointer,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorRename {
@@ -211,7 +204,6 @@ type bytesFree func(b *opendalBytes)
 
 var withBytesFree = withFFI(ffiOpts{
 	sym:    symBytesFree,
-	nArgs:  1,
 	rType:  &ffi.TypeVoid,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(_ context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) bytesFree {

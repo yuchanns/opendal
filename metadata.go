@@ -57,7 +57,6 @@ const symMetadataContentLength = "opendal_metadata_content_length"
 
 var withMetaContentLength = withFFI(ffiOpts{
 	sym:    symMetadataContentLength,
-	nArgs:  1,
 	rType:  &ffi.TypeUint64,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) metaContentLength {
@@ -77,7 +76,6 @@ const symMetadataIsFile = "opendal_metadata_is_file"
 
 var withMetaIsFile = withFFI(ffiOpts{
 	sym:    symMetadataIsFile,
-	nArgs:  1,
 	rType:  &ffi.TypeUint8,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) metaIsFile {
@@ -97,7 +95,6 @@ const symMetadataIsDir = "opendal_metadata_is_dir"
 
 var withMetaIsDir = withFFI(ffiOpts{
 	sym:    symMetadataIsDir,
-	nArgs:  1,
 	rType:  &ffi.TypeUint8,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) metaIsDir {
@@ -117,7 +114,6 @@ const symMetadataLastModified = "opendal_metadata_last_modified_ms"
 
 var withMetaLastModified = withFFI(ffiOpts{
 	sym:    symMetadataLastModified,
-	nArgs:  1,
 	rType:  &ffi.TypeSint64,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) metaLastModified {
@@ -137,7 +133,6 @@ const symMetadataFree = "opendal_metadata_free"
 
 var withMetaFree = withFFI(ffiOpts{
 	sym:    symMetadataFree,
-	nArgs:  1,
 	rType:  &ffi.TypeVoid,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) metaFree {

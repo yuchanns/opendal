@@ -85,7 +85,6 @@ type operatorList func(op *opendalOperator, path string) (*opendalLister, error)
 
 var withOperatorList = withFFI(ffiOpts{
 	sym:    symOperatorList,
-	nArgs:  2,
 	rType:  &typeResultList,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorList {
@@ -113,7 +112,6 @@ type listerFree func(l *opendalLister)
 
 var withListerFree = withFFI(ffiOpts{
 	sym:    symListerFree,
-	nArgs:  1,
 	rType:  &ffi.TypeVoid,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) listerFree {
@@ -131,7 +129,6 @@ type listerNext func(l *opendalLister) (*opendalEntry, error)
 
 var withListerNext = withFFI(ffiOpts{
 	sym:    symListerNext,
-	nArgs:  1,
 	rType:  &typeResultListerNext,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) listerNext {
@@ -154,7 +151,6 @@ type entryFree func(e *opendalEntry)
 
 var withEntryFree = withFFI(ffiOpts{
 	sym:    symEntryFree,
-	nArgs:  1,
 	rType:  &ffi.TypePointer,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) entryFree {
@@ -172,7 +168,6 @@ type entryName func(e *opendalEntry) string
 
 var withEntryName = withFFI(ffiOpts{
 	sym:    symEntryName,
-	nArgs:  1,
 	rType:  &ffi.TypePointer,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) entryName {
@@ -192,7 +187,6 @@ type entryPath func(e *opendalEntry) string
 
 var withEntryPath = withFFI(ffiOpts{
 	sym:    symEntryPath,
-	nArgs:  1,
 	rType:  &ffi.TypePointer,
 	aTypes: []*ffi.Type{&ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) entryPath {

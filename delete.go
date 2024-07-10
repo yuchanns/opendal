@@ -19,7 +19,6 @@ const symOperatorDelete = "opendal_operator_delete"
 
 var withOperatorDelete = withFFI(ffiOpts{
 	sym:    symOperatorDelete,
-	nArgs:  2,
 	rType:  &ffi.TypePointer,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorDelete {

@@ -37,19 +37,23 @@ func getFFI[T any](ctx context.Context, key string) T {
 
 type ffiOpts struct {
 	sym    string
-	nArgs  uint32
 	rType  *ffi.Type
 	aTypes []*ffi.Type
 }
 
 func withFFI[T any](
 	opts ffiOpts,
-	withFunc func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) T,
+	withFunc func(
+		ctx context.Context,
+		ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer),
+	) T,
 ) func(ctx context.Context, libopendal uintptr) (context.Context, error) {
 	return func(ctx context.Context, libopendal uintptr) (context.Context, error) {
 		var cif ffi.Cif
 		if status := ffi.PrepCif(
-			&cif, ffi.DefaultAbi, opts.nArgs,
+			&cif,
+			ffi.DefaultAbi,
+			uint32(len(opts.aTypes)),
 			opts.rType,
 			opts.aTypes...,
 		); status != ffi.OK {
