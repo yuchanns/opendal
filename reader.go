@@ -47,11 +47,11 @@ type OperatorReader struct {
 	ctx   context.Context
 }
 
-func (r *OperatorReader) Read(length uint) ([]byte, uint, error) {
+func (r *OperatorReader) Read(length uint) ([]byte, error) {
 	read := getFFI[readerRead](r.ctx, symReaderRead)
 	buf := make([]byte, length)
 	size, err := read(r.inner, buf)
-	return buf, size, err
+	return buf[:size], err
 }
 
 const symOperatorRead = "opendal_operator_read"
@@ -156,7 +156,7 @@ func withReaderRead(ctx context.Context, libopendal uintptr) (newCtx context.Con
 			if result.error != nil {
 				return 0, parseError(ctx, result.error)
 			}
-			return uint(len(buf)), nil
+			return result.size, nil
 		}
 	})
 }

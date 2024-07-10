@@ -205,10 +205,9 @@ func testReader(assert *require.Assertions, op *opendal.Operator) {
 
 	reader, err := op.Reader(path)
 	assert.Nil(err)
-	buf, size, err := reader.Read(uint(len(data)))
+	buf, err := reader.Read(uint(len(data) + 10))
 	assert.Nil(err)
 	assert.Equal(data, buf)
-	assert.Equal(uint(len(buf)), size)
 
 	assert.Nil(op.Delete(path))
 }
