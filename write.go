@@ -8,14 +8,14 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func (o *Operator) Write(path string, data []byte) error {
-	write := getFFI[operatorWrite](o.ctx, symOperatorWrite)
-	return write(o.inner, path, data)
+func (op *Operator) Write(path string, data []byte) error {
+	write := getFFI[operatorWrite](op.ctx, symOperatorWrite)
+	return write(op.inner, path, data)
 }
 
-func (o *Operator) CreateDir(path string) error {
-	createDir := getFFI[operatorCreateDir](o.ctx, symOperatorCreateDir)
-	return createDir(o.inner, path)
+func (op *Operator) CreateDir(path string) error {
+	createDir := getFFI[operatorCreateDir](op.ctx, symOperatorCreateDir)
+	return createDir(op.inner, path)
 }
 
 const symOperatorWrite = "opendal_operator_write"

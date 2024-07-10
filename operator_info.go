@@ -12,7 +12,7 @@ import (
 func (op *Operator) Info() *OperatorInfo {
 	newInfo := getFFI[operatorInfoNew](op.ctx, symOperatorInfoNew)
 	inner := newInfo(op.inner)
-	info := &OperatorInfo{inner: inner, ctx: op.ctx}
+	info := &OperatorInfo{inner: inner, op: op}
 
 	runtime.SetFinalizer(info, func(_ *OperatorInfo) {
 		free := getFFI[operatorInfoFree](op.ctx, symOperatorInfoFree)
@@ -23,33 +23,33 @@ func (op *Operator) Info() *OperatorInfo {
 
 type OperatorInfo struct {
 	inner *opendalOperatorInfo
-	ctx   context.Context
+	op    *Operator // hold the op pointer to ensure it is gc after OperatorInfo instance.
 }
 
 func (i *OperatorInfo) GetFullCapability() *Capability {
-	getCap := getFFI[operatorInfoGetFullCapability](i.ctx, symOperatorInfoGetFullCapability)
+	getCap := getFFI[operatorInfoGetFullCapability](i.op.ctx, symOperatorInfoGetFullCapability)
 	cap := getCap(i.inner)
 	return &Capability{inner: cap}
 }
 
 func (i *OperatorInfo) GetNativeCapability() *Capability {
-	getCap := getFFI[operatorInfoGetNativeCapability](i.ctx, symOperatorInfoGetNativeCapability)
+	getCap := getFFI[operatorInfoGetNativeCapability](i.op.ctx, symOperatorInfoGetNativeCapability)
 	cap := getCap(i.inner)
 	return &Capability{inner: cap}
 }
 
 func (i *OperatorInfo) GetScheme() string {
-	getScheme := getFFI[operatorInfoGetScheme](i.ctx, symOperatorInfoGetScheme)
+	getScheme := getFFI[operatorInfoGetScheme](i.op.ctx, symOperatorInfoGetScheme)
 	return getScheme(i.inner)
 }
 
 func (i *OperatorInfo) GetRoot() string {
-	getRoot := getFFI[operatorInfoGetRoot](i.ctx, symOperatorInfoGetRoot)
+	getRoot := getFFI[operatorInfoGetRoot](i.op.ctx, symOperatorInfoGetRoot)
 	return getRoot(i.inner)
 }
 
 func (i *OperatorInfo) GetName() string {
-	getName := getFFI[operatorInfoGetName](i.ctx, symOperatorInfoGetName)
+	getName := getFFI[operatorInfoGetName](i.op.ctx, symOperatorInfoGetName)
 	return getName(i.inner)
 }
 

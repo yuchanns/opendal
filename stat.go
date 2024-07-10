@@ -14,7 +14,7 @@ func (op *Operator) Stat(path string) (*Metadata, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newMetadata(op.ctx, meta), nil
+	return newMetadata(op, meta), nil
 }
 
 func (op *Operator) IsExist(path string) (bool, error) {

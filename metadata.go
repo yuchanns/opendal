@@ -10,40 +10,39 @@ import (
 )
 
 type Metadata struct {
-	ctx context.Context
-
 	inner *opendalMetadata
+	op    *Operator // hold the op pointer to ensure it is gc after Metadata instance.
 }
 
-func newMetadata(ctx context.Context, inner *opendalMetadata) *Metadata {
+func newMetadata(op *Operator, inner *opendalMetadata) *Metadata {
 	m := &Metadata{
-		ctx:   ctx,
+		op:    op,
 		inner: inner,
 	}
 	runtime.SetFinalizer(m, func(_ *Metadata) {
-		free := getFFI[metaFree](ctx, symMetadataFree)
+		free := getFFI[metaFree](op.ctx, symMetadataFree)
 		free(inner)
 	})
 	return m
 }
 
 func (m *Metadata) ContentLength() uint64 {
-	length := getFFI[metaContentLength](m.ctx, symMetadataContentLength)
+	length := getFFI[metaContentLength](m.op.ctx, symMetadataContentLength)
 	return length(m.inner)
 }
 
 func (m *Metadata) IsFile() bool {
-	isFile := getFFI[metaIsFile](m.ctx, symMetadataIsFile)
+	isFile := getFFI[metaIsFile](m.op.ctx, symMetadataIsFile)
 	return isFile(m.inner)
 }
 
 func (m *Metadata) IsDir() bool {
-	isDir := getFFI[metaIsDir](m.ctx, symMetadataIsDir)
+	isDir := getFFI[metaIsDir](m.op.ctx, symMetadataIsDir)
 	return isDir(m.inner)
 }
 
 func (m *Metadata) LastModified() time.Time {
-	lastModifiedMs := getFFI[metaLastModified](m.ctx, symMetadataLastModified)
+	lastModifiedMs := getFFI[metaLastModified](m.op.ctx, symMetadataLastModified)
 	ms := lastModifiedMs(m.inner)
 	if ms == -1 {
 		var zeroTime time.Time

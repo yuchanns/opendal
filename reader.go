@@ -9,34 +9,34 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func (o *Operator) Read(path string) ([]byte, error) {
-	read := getFFI[operatorRead](o.ctx, symOperatorRead)
-	bytes, err := read(o.inner, path)
+func (op *Operator) Read(path string) ([]byte, error) {
+	read := getFFI[operatorRead](op.ctx, symOperatorRead)
+	bytes, err := read(op.inner, path)
 	if err != nil {
 		return nil, err
 	}
 
 	data := parseBytes(bytes)
 	if len(data) > 0 {
-		free := getFFI[bytesFree](o.ctx, symBytesFree)
+		free := getFFI[bytesFree](op.ctx, symBytesFree)
 		free(bytes)
 
 	}
 	return data, nil
 }
 
-func (o *Operator) Reader(path string) (*OperatorReader, error) {
-	getReader := getFFI[operatorReader](o.ctx, symOperatorReader)
-	inner, err := getReader(o.inner, path)
+func (op *Operator) Reader(path string) (*OperatorReader, error) {
+	getReader := getFFI[operatorReader](op.ctx, symOperatorReader)
+	inner, err := getReader(op.inner, path)
 	if err != nil {
 		return nil, err
 	}
 	reader := &OperatorReader{
 		inner: inner,
-		ctx:   o.ctx,
+		op:    op,
 	}
 	runtime.SetFinalizer(reader, func(_ *OperatorReader) {
-		free := getFFI[readerFree](o.ctx, symReaderFree)
+		free := getFFI[readerFree](op.ctx, symReaderFree)
 		free(inner)
 	})
 	return reader, nil
@@ -44,11 +44,11 @@ func (o *Operator) Reader(path string) (*OperatorReader, error) {
 
 type OperatorReader struct {
 	inner *opendalReader
-	ctx   context.Context
+	op    *Operator // // hold the op pointer to ensure it is gc after OperatorReader instance.
 }
 
 func (r *OperatorReader) Read(length uint) ([]byte, error) {
-	read := getFFI[readerRead](r.ctx, symReaderRead)
+	read := getFFI[readerRead](r.op.ctx, symReaderRead)
 	buf := make([]byte, length)
 	size, err := read(r.inner, buf)
 	return buf[:size], err
