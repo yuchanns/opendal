@@ -26,6 +26,7 @@ func TestBehavior(t *testing.T) {
 	var tests []behaviorTest
 
 	tests = append(tests, testsCopy(cap)...)
+	tests = append(tests, testsCreateDir(cap)...)
 
 	for i := range tests {
 		test := tests[i]
