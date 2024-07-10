@@ -1,16 +1,16 @@
 package opendal_test
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"opendal"
 	"os"
 	"reflect"
 	"runtime"
-	"slices"
 	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/yuchanns/opendal-go-services/aliyun_drive"
 )
@@ -25,15 +25,7 @@ func TestBehavior(t *testing.T) {
 
 	var tests []behaviorTest
 
-	if cap.Stat() && cap.Write() && cap.Blocking() {
-		tests = append(tests,
-			testStat,
-			testWrite,
-			testList,
-			testReader,
-			testCopy,
-		)
-	}
+	tests = append(tests, testsCopy(cap)...)
 
 	for i := range tests {
 		test := tests[i]
@@ -96,158 +88,26 @@ func newOperator() (op *opendal.Operator, err error) {
 	return
 }
 
-func testStat(assert *require.Assertions, op *opendal.Operator) {
-	uuid := uuid.NewString()
-	dir := fmt.Sprintf("%s/dir/", uuid)
-	path := fmt.Sprintf("%spath", dir)
-	data := []byte(uuid)
-
-	err := op.CreateDir(dir)
-	assert.Nil(err)
-
-	err = op.Write(path, data)
-	assert.Nil(err)
-
-	_, err = op.Stat("/not_exists")
-	assert.NotNil(err)
-	assert.Equal(opendal.CodeNotFound, err.(*opendal.Error).Code())
-	exist, err := op.IsExist("/not_exists")
-	assert.Nil(err)
-	assert.False(exist)
-
-	meta, err := op.Stat(strings.TrimSuffix(dir, "/"))
-	assert.Nil(err)
-	assert.True(meta.IsDir())
-	assert.False(meta.IsFile())
-	exist, err = op.IsExist(strings.TrimSuffix(dir, "/"))
-	assert.Nil(err)
-	assert.True(exist)
-
-	meta, err = op.Stat(path)
-	assert.Nil(err)
-	assert.Equal(uint64(len(data)), meta.ContentLength())
-	assert.False(meta.IsDir())
-	assert.True(meta.IsFile())
-	assert.False(meta.LastModified().IsZero())
-	exist, err = op.IsExist(path)
-	assert.Nil(err)
-	assert.True(exist)
-
-	assert.Nil(op.Delete(path))
-	assert.Nil(op.Delete(dir))
+func assertErrorCode(err error) opendal.ErrorCode {
+	return err.(*opendal.Error).Code()
 }
 
-func testWrite(assert *require.Assertions, op *opendal.Operator) {
-	uuid := uuid.NewString()
-	path := fmt.Sprintf("%s/path", uuid)
-	data := []byte(uuid)
+func genBytesWithRange(min, max uint) ([]byte, uint) {
+	diff := max - min
+	n, _ := rand.Int(rand.Reader, big.NewInt(int64(diff+1)))
+	size := uint(n.Int64()) + min
 
-	err := op.Write(path, data)
-	assert.Nil(err)
+	content := make([]byte, size)
 
-	result, err := op.Read(path)
-	assert.Nil(err)
-	assert.Equal(data, result)
+	_, _ = rand.Read(content)
 
-	assert.Nil(op.Delete(path))
+	return content, size
 }
 
-func testList(assert *require.Assertions, op *opendal.Operator) {
-	uuid := uuid.NewString()
-	dir := fmt.Sprintf("%s/dir/", uuid)
-	pathA := fmt.Sprintf("%spath_a", dir)
-	pathB := fmt.Sprintf("%spath_b", dir)
-	data := []byte(uuid)
-
-	err := op.CreateDir(dir)
-	assert.Nil(err)
-
-	err = op.Write(pathA, data)
-	assert.Nil(err)
-
-	err = op.Write(pathB, data)
-	assert.Nil(err)
-
-	lister, err := op.List(dir)
-	assert.Nil(err)
-
-	var (
-		names []string
-		paths []string
-
-		expectedNames = []string{"path_a", "path_b"}
-		expectedPaths = []string{pathA, pathB}
-	)
-	for lister.Next() {
-		entry := lister.Entry()
-		assert.Nil(entry.Error())
-		names = append(names, entry.Name())
-		paths = append(paths, entry.Path())
+func genBytes(cap *opendal.Capability) ([]byte, uint) {
+	maxSize := cap.WriteTotalMaxSize()
+	if maxSize == 0 {
+		maxSize = 4 * 1024 * 1024
 	}
-	slices.Sort(expectedNames)
-	slices.Sort(expectedPaths)
-	slices.Sort(names)
-	slices.Sort(paths)
-
-	assert.Equal(expectedNames, names)
-	assert.Equal(expectedPaths, paths)
-
-	assert.Nil(op.Delete(dir))
-}
-
-func testReader(assert *require.Assertions, op *opendal.Operator) {
-	uuid := uuid.NewString()
-	path := fmt.Sprintf("%s/path", uuid)
-	data := []byte(uuid)
-
-	err := op.Write(path, data)
-	assert.Nil(err)
-
-	reader, err := op.Reader(path)
-	assert.Nil(err)
-	buf, err := reader.Read(uint(len(data) + 10))
-	assert.Nil(err)
-	assert.Equal(data, buf)
-
-	assert.Nil(op.Delete(path))
-}
-
-func testCopy(assert *require.Assertions, op *opendal.Operator) {
-	uuid := uuid.NewString()
-	pathA := fmt.Sprintf("%s/pathA", uuid)
-	pathB := fmt.Sprintf("%s/pathB", uuid)
-	data := []byte(uuid)
-
-	err := op.Write(pathA, data)
-	assert.Nil(err)
-
-	assert.Nil(op.Copy(pathA, pathB))
-	result, err := op.Read(pathB)
-	assert.Nil(err)
-	assert.Equal(data, result)
-
-	assert.Nil(op.Delete(pathA))
-	assert.Nil(op.Delete(pathB))
-}
-
-func testRename(assert *require.Assertions, op *opendal.Operator) {
-	uuid := uuid.NewString()
-	pathA := fmt.Sprintf("%s/pathA", uuid)
-	pathB := fmt.Sprintf("%s/pathB", uuid)
-	data := []byte(uuid)
-
-	err := op.Write(pathA, data)
-	assert.Nil(err)
-
-	assert.Nil(op.Rename(pathA, pathB))
-
-	exist, err := op.IsExist(pathA)
-	assert.Nil(err)
-	assert.False(exist)
-
-	result, err := op.Read(pathB)
-	assert.Nil(err)
-	assert.Equal(data, result)
-
-	assert.Nil(op.Delete(pathB))
+	return genBytesWithRange(1, maxSize)
 }

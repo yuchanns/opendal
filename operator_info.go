@@ -133,8 +133,8 @@ func (c *Capability) WriteMultiAlignSize() uint {
 	return c.inner.writeMultiAlignSize
 }
 
-func (c *Capability) WriteTotalMaxSize() bool {
-	return c.inner.writeTotalMaxSize == 1
+func (c *Capability) WriteTotalMaxSize() uint {
+	return c.inner.writeTotalMaxSize
 }
 
 func (c *Capability) CreateDir() bool {
