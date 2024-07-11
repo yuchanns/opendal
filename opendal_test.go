@@ -22,7 +22,7 @@ type behaviorTest = func(assert *require.Assertions, op *opendal.Operator, fixtu
 func TestBehavior(t *testing.T) {
 	assert := require.New(t)
 
-	op, err := newOperator()
+	op, closeFunc, err := newOperator()
 	assert.Nil(err)
 
 	cap := op.Info().GetFullCapability()
@@ -38,6 +38,10 @@ func TestBehavior(t *testing.T) {
 
 	t.Cleanup(func() {
 		fixture.Cleanup(assert)
+
+		if closeFunc != nil {
+			closeFunc()
+		}
 	})
 
 	for i := range tests {
@@ -58,7 +62,7 @@ func TestBehavior(t *testing.T) {
 	}
 }
 
-func newOperator() (op *opendal.Operator, err error) {
+func newOperator() (op *opendal.Operator, closeFunc func(), err error) {
 	var schemes = []opendal.Schemer{
 		aliyun_drive.Scheme,
 	}
@@ -68,6 +72,14 @@ func newOperator() (op *opendal.Operator, err error) {
 	for _, s := range schemes {
 		if s.Scheme() != test {
 			continue
+		}
+		var path string
+		path, err = s.Path()
+		if err != nil {
+			return
+		}
+		closeFunc = func() {
+			os.Remove(path)
 		}
 		scheme = s
 		break

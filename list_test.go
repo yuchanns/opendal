@@ -11,7 +11,7 @@ import (
 )
 
 func testsList(cap *opendal.Capability) []behaviorTest {
-	if cap.Read() != cap.Write() != cap.List() {
+	if !cap.Read() || !cap.Write() || !cap.List() {
 		return nil
 	}
 	return []behaviorTest{
