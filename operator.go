@@ -35,16 +35,16 @@ func (op *Operator) Rename(src, dest string) error {
 
 const symOperatorNew = "opendal_operator_new"
 
-type operatorNew func(scheme Schemer, opts *operatorOptions) (op *opendalOperator, err error)
+type operatorNew func(scheme Scheme, opts *operatorOptions) (op *opendalOperator, err error)
 
 var withOperatorNew = withFFI(ffiOpts{
 	sym:    symOperatorNew,
 	rType:  &typeResultOperatorNew,
 	aTypes: []*ffi.Type{&ffi.TypePointer, &ffi.TypePointer},
 }, func(ctx context.Context, ffiCall func(rValue unsafe.Pointer, aValues ...unsafe.Pointer)) operatorNew {
-	return func(scheme Schemer, opts *operatorOptions) (op *opendalOperator, err error) {
+	return func(scheme Scheme, opts *operatorOptions) (op *opendalOperator, err error) {
 		var byteName *byte
-		byteName, err = unix.BytePtrFromString(scheme.Scheme())
+		byteName, err = unix.BytePtrFromString(scheme.Name())
 		if err != nil {
 			return
 		}

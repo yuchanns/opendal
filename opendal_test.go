@@ -63,23 +63,22 @@ func TestBehavior(t *testing.T) {
 }
 
 func newOperator() (op *opendal.Operator, closeFunc func(), err error) {
-	var schemes = []opendal.Schemer{
+	var schemes = []opendal.Scheme{
 		aliyun_drive.Scheme,
 	}
 
 	test := os.Getenv("OPENDAL_TEST")
-	var scheme opendal.Schemer
+	var scheme opendal.Scheme
 	for _, s := range schemes {
-		if s.Scheme() != test {
+		if s.Name() != test {
 			continue
 		}
-		var path string
-		path, err = s.Path()
+		err = s.LoadOnce()
 		if err != nil {
 			return
 		}
 		closeFunc = func() {
-			os.Remove(path)
+			os.Remove(s.Path())
 		}
 		scheme = s
 		break
@@ -89,7 +88,7 @@ func newOperator() (op *opendal.Operator, closeFunc func(), err error) {
 		return
 	}
 
-	prefix := fmt.Sprintf("OPENDAL_%s_", strings.ToUpper(scheme.Scheme()))
+	prefix := fmt.Sprintf("OPENDAL_%s_", strings.ToUpper(scheme.Name()))
 
 	opts := opendal.OperatorOptions{}
 	for _, env := range os.Environ() {

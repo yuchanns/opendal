@@ -5,9 +5,10 @@ import (
 	"runtime"
 )
 
-type Schemer interface {
-	Scheme() string
-	Path() (string, error)
+type Scheme interface {
+	Name() string
+	Path() string
+	LoadOnce() error
 }
 
 type OperatorOptions map[string]string
@@ -18,13 +19,13 @@ type Operator struct {
 	inner *opendalOperator
 }
 
-func NewOperator(scheme Schemer, opts OperatorOptions) (op *Operator, err error) {
-	path, err := scheme.Path()
+func NewOperator(scheme Scheme, opts OperatorOptions) (op *Operator, err error) {
+	err = scheme.LoadOnce()
 	if err != nil {
 		return
 	}
 
-	ctx, cancel, err := contextWithFFIs(path)
+	ctx, cancel, err := contextWithFFIs(scheme.Path())
 	if err != nil {
 		return
 	}
