@@ -40,6 +40,7 @@ func TestBehavior(t *testing.T) {
 	tests = append(tests, testsList(cap)...)
 	tests = append(tests, testsRead(cap)...)
 	tests = append(tests, testsRename(cap)...)
+	tests = append(tests, testsStat(cap)...)
 
 	fixture := newFixture(op)
 
