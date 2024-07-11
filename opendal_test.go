@@ -17,6 +17,11 @@ import (
 	"github.com/yuchanns/opendal-go-services/aliyun_drive"
 )
 
+// Add more schemes for behavior tests here.
+var schemes = []opendal.Scheme{
+	aliyun_drive.Scheme,
+}
+
 type behaviorTest = func(assert *require.Assertions, op *opendal.Operator, fixture *fixture)
 
 func TestBehavior(t *testing.T) {
@@ -63,10 +68,6 @@ func TestBehavior(t *testing.T) {
 }
 
 func newOperator() (op *opendal.Operator, closeFunc func(), err error) {
-	var schemes = []opendal.Scheme{
-		aliyun_drive.Scheme,
-	}
-
 	test := os.Getenv("OPENDAL_TEST")
 	var scheme opendal.Scheme
 	for _, s := range schemes {
