@@ -38,6 +38,7 @@ func TestBehavior(t *testing.T) {
 	tests = append(tests, testsCreateDir(cap)...)
 	tests = append(tests, testsDelete(cap)...)
 	tests = append(tests, testsList(cap)...)
+	tests = append(tests, testsRead(cap)...)
 
 	fixture := newFixture(op)
 
