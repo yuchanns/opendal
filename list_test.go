@@ -2,12 +2,12 @@ package opendal_test
 
 import (
 	"fmt"
-	"opendal"
 	"slices"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"go.yuchanns.xyz/opendal"
 )
 
 func testsList(cap *opendal.Capability) []behaviorTest {

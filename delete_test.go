@@ -1,10 +1,9 @@
 package opendal_test
 
 import (
-	"opendal"
-
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"go.yuchanns.xyz/opendal"
 )
 
 func testsDelete(cap *opendal.Capability) []behaviorTest {

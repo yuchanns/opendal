@@ -1,10 +1,9 @@
 package opendal_test
 
 import (
-	"opendal"
-
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"go.yuchanns.xyz/opendal"
 )
 
 func testsRead(cap *opendal.Capability) []behaviorTest {

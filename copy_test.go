@@ -2,10 +2,10 @@ package opendal_test
 
 import (
 	"fmt"
-	"opendal"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"go.yuchanns.xyz/opendal"
 )
 
 func testsCopy(cap *opendal.Capability) []behaviorTest {

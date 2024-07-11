@@ -1,4 +1,4 @@
-module opendal
+module go.yuchanns.xyz/opendal
 
 go 1.22.4
 

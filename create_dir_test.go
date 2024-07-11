@@ -1,9 +1,8 @@
 package opendal_test
 
 import (
-	"opendal"
-
 	"github.com/stretchr/testify/require"
+	"go.yuchanns.xyz/opendal"
 )
 
 func testsCreateDir(cap *opendal.Capability) []behaviorTest {

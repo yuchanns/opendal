@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"opendal"
 	"os"
 	"reflect"
 	"runtime"
@@ -15,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/yuchanns/opendal-go-services/aliyun_drive"
+	"go.yuchanns.xyz/opendal"
 )
 
 // Add more schemes for behavior tests here.
