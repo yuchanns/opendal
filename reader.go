@@ -50,8 +50,19 @@ type OperatorReader struct {
 func (r *OperatorReader) Read(length uint) ([]byte, error) {
 	read := getFFI[readerRead](r.op.ctx, symReaderRead)
 	buf := make([]byte, length)
-	size, err := read(r.inner, buf)
-	return buf[:size], err
+	var (
+		totalSize uint
+		size      uint
+		err       error
+	)
+	for {
+		size, err = read(r.inner, buf[totalSize:])
+		totalSize += size
+		if size == 0 || err != nil || totalSize >= length {
+			break
+		}
+	}
+	return buf[:totalSize], err
 }
 
 const symOperatorRead = "opendal_operator_read"
