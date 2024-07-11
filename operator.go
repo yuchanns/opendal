@@ -204,7 +204,7 @@ var withOperatorRename = withFFI(ffiOpts{
 		}
 		var e *opendalError
 		ffiCall(
-			unsafe.Pointer(&err),
+			unsafe.Pointer(&e),
 			unsafe.Pointer(&op),
 			unsafe.Pointer(&byteSrc),
 			unsafe.Pointer(&byteDest),
