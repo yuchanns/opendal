@@ -2,7 +2,6 @@ package opendal
 
 import (
 	"context"
-	"runtime"
 	"unsafe"
 
 	"github.com/jupiterrider/ffi"
@@ -12,45 +11,50 @@ import (
 func (op *Operator) Info() *OperatorInfo {
 	newInfo := getFFI[operatorInfoNew](op.ctx, symOperatorInfoNew)
 	inner := newInfo(op.inner)
-	info := &OperatorInfo{inner: inner, op: op}
+	getFullCap := getFFI[operatorInfoGetFullCapability](op.ctx, symOperatorInfoGetFullCapability)
+	getNativeCap := getFFI[operatorInfoGetNativeCapability](op.ctx, symOperatorInfoGetNativeCapability)
+	getScheme := getFFI[operatorInfoGetScheme](op.ctx, symOperatorInfoGetScheme)
+	getRoot := getFFI[operatorInfoGetRoot](op.ctx, symOperatorInfoGetRoot)
+	getName := getFFI[operatorInfoGetName](op.ctx, symOperatorInfoGetName)
 
-	runtime.SetFinalizer(info, func(_ *OperatorInfo) {
-		free := getFFI[operatorInfoFree](op.ctx, symOperatorInfoFree)
-		free(inner)
-	})
-	return info
+	free := getFFI[operatorInfoFree](op.ctx, symOperatorInfoFree)
+	defer free(inner)
+
+	return &OperatorInfo{
+		scheme:    getScheme(inner),
+		root:      getRoot(inner),
+		name:      getName(inner),
+		fullCap:   &Capability{inner: getFullCap(inner)},
+		nativeCap: &Capability{inner: getNativeCap(inner)},
+	}
 }
 
 type OperatorInfo struct {
-	inner *opendalOperatorInfo
-	op    *Operator // hold the op pointer to ensure it is gc after OperatorInfo instance.
+	scheme    string
+	root      string
+	name      string
+	fullCap   *Capability
+	nativeCap *Capability
 }
 
 func (i *OperatorInfo) GetFullCapability() *Capability {
-	getCap := getFFI[operatorInfoGetFullCapability](i.op.ctx, symOperatorInfoGetFullCapability)
-	cap := getCap(i.inner)
-	return &Capability{inner: cap}
+	return i.fullCap
 }
 
 func (i *OperatorInfo) GetNativeCapability() *Capability {
-	getCap := getFFI[operatorInfoGetNativeCapability](i.op.ctx, symOperatorInfoGetNativeCapability)
-	cap := getCap(i.inner)
-	return &Capability{inner: cap}
+	return i.nativeCap
 }
 
 func (i *OperatorInfo) GetScheme() string {
-	getScheme := getFFI[operatorInfoGetScheme](i.op.ctx, symOperatorInfoGetScheme)
-	return getScheme(i.inner)
+	return i.scheme
 }
 
 func (i *OperatorInfo) GetRoot() string {
-	getRoot := getFFI[operatorInfoGetRoot](i.op.ctx, symOperatorInfoGetRoot)
-	return getRoot(i.inner)
+	return i.root
 }
 
 func (i *OperatorInfo) GetName() string {
-	getName := getFFI[operatorInfoGetName](i.op.ctx, symOperatorInfoGetName)
-	return getName(i.inner)
+	return i.name
 }
 
 type Capability struct {
