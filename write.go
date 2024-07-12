@@ -8,11 +8,80 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// Write writes the given bytes to the specified path.
+//
+// Write is a wrapper around the C-binding function `opendal_operator_write`. It provides a simplified
+// interface for writing data to the storage. Currently, this implementation does not support the
+// `Operator::write_with` method from the original Rust library, nor does it support streaming writes
+// or multipart uploads.
+//
+// # Parameters
+//
+//   - path: The destination path where the bytes will be written.
+//   - data: The byte slice containing the data to be written.
+//
+// # Returns
+//
+//   - error: An error if the write operation fails, or nil if successful.
+//
+// # Example
+//
+//	func main() {
+//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		err = op.Write("test", []byte("Hello opendal go binding!"))
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//	}
+//
+// Note: This example assumes proper error handling and import statements.
 func (op *Operator) Write(path string, data []byte) error {
 	write := getFFI[operatorWrite](op.ctx, symOperatorWrite)
 	return write(op.inner, path, data)
 }
 
+// CreateDir creates a directory at the specified path.
+//
+// CreateDir is a wrapper around the C-binding function `opendal_operator_create_dir`.
+// It provides a way to create directories in the storage system.
+//
+// # Parameters
+//
+//   - path: The path where the directory should be created.
+//
+// # Returns
+//
+//   - error: An error if the directory creation fails, or nil if successful.
+//
+// # Notes
+//
+// It is mandatory to include a trailing slash (/) in the path to indicate
+// that it is a directory. Failing to do so may result in a `CodeNotADirectory`
+// error being returned by OpenDAL.
+//
+// # Behavior
+//
+//   - Creating a directory that already exists will succeed without error.
+//   - Directory creation is always recursive, similar to the `mkdir -p` command.
+//
+// # Example
+//
+//	func main() {
+//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		err = op.CreateDir("test/")
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//	}
+//
+// Note: This example assumes proper error handling and import statements.
+// The trailing slash in "test/" is important to indicate it's a directory.
 func (op *Operator) CreateDir(path string) error {
 	createDir := getFFI[operatorCreateDir](op.ctx, symOperatorCreateDir)
 	return createDir(op.inner, path)

@@ -37,10 +37,12 @@ func testReader(assert *require.Assertions, op *opendal.Operator, fixture *fixtu
 
 	r, err := op.Reader(path)
 	assert.Nil(err)
-	bs, err := r.Read(size)
+	defer r.Close()
+	bs := make([]byte, size)
+	length, err := r.Read(bs)
 	assert.Nil(err)
-	assert.Equal(size, uint(len(bs)), "read size")
-	assert.Equal(content, bs, "read content")
+	assert.Equal(size, uint(length), "read size")
+	assert.Equal(content, bs[:length], "read content")
 }
 
 func testReadNotExist(assert *require.Assertions, op *opendal.Operator, fixture *fixture) {

@@ -2,13 +2,47 @@ package opendal
 
 import (
 	"context"
-	"runtime"
+	"io"
 	"unsafe"
 
 	"github.com/jupiterrider/ffi"
 	"golang.org/x/sys/unix"
 )
 
+// Read reads the entire contents of the file at the specified path into a byte slice.
+//
+// This function is a wrapper around the C-binding function `opendal_operator_read`.
+//
+// # Parameters
+//
+//   - path: The path of the file to read.
+//
+// # Returns
+//
+//   - []byte: The contents of the file as a byte slice.
+//   - error: An error if the read operation fails, or nil if successful.
+//
+// # Notes
+//
+//   - This implementation does not support the `read_with` functionality.
+//   - Read allocates a new byte slice internally. For more precise memory control
+//     or lazy reading, consider using the Reader() method instead.
+//
+// # Example
+//
+//	func main() {
+//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		data, err := op.Read("test")
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		fmt.Printf("Read: %s\n", data)
+//	}
+//
+// Note: This example assumes proper error handling and import statements.
 func (op *Operator) Read(path string) ([]byte, error) {
 	read := getFFI[operatorRead](op.ctx, symOperatorRead)
 	bytes, err := read(op.inner, path)
@@ -25,7 +59,55 @@ func (op *Operator) Read(path string) ([]byte, error) {
 	return data, nil
 }
 
-func (op *Operator) Reader(path string) (*OperatorReader, error) {
+// Reader creates a new Reader for reading the contents of a file at the specified path.
+//
+// This function is a wrapper around the C-binding function `opendal_operator_reader`.
+//
+// # Parameters
+//
+//   - path: The path of the file to read.
+//
+// # Returns
+//
+//   - io.ReadCloser: A reader for accessing the file's contents.
+//   - error: An error if the reader creation fails, or nil if successful.
+//
+// # Notes
+//
+//   - This implementation does not support the `reader_with` functionality.
+//   - The returned reader allows for more controlled and efficient reading of large files.
+//
+// # Example
+//
+//	func main() {
+//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//
+//		r, err := op.Reader("path/to/file")
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		defer r.Close()
+//
+//		size := 1024 // Read 1KB at a time
+//		buffer := make([]byte, size)
+//
+//		for {
+//			n, err := r.Read(buffer)
+//			if err == io.EOF {
+//				break
+//			}
+//			if err != nil {
+//				log.Fatal(err)
+//			}
+//			fmt.Printf("Read %d bytes: %s\n", n, buffer[:n])
+//		}
+//	}
+//
+// Note: This example assumes proper error handling and import statements.
+func (op *Operator) Reader(path string) (io.ReadCloser, error) {
 	getReader := getFFI[operatorReader](op.ctx, symOperatorReader)
 	inner, err := getReader(op.inner, path)
 	if err != nil {
@@ -35,10 +117,6 @@ func (op *Operator) Reader(path string) (*OperatorReader, error) {
 		inner: inner,
 		op:    op,
 	}
-	runtime.SetFinalizer(reader, func(_ *OperatorReader) {
-		free := getFFI[readerFree](op.ctx, symReaderFree)
-		free(inner)
-	})
 	return reader, nil
 }
 
@@ -47,9 +125,9 @@ type OperatorReader struct {
 	op    *Operator // // hold the op pointer to ensure it is gc after OperatorReader instance.
 }
 
-func (r *OperatorReader) Read(length uint) ([]byte, error) {
+func (r *OperatorReader) Read(buf []byte) (int, error) {
+	length := uint(len(buf))
 	read := getFFI[readerRead](r.op.ctx, symReaderRead)
-	buf := make([]byte, length)
 	var (
 		totalSize uint
 		size      uint
@@ -62,7 +140,13 @@ func (r *OperatorReader) Read(length uint) ([]byte, error) {
 			break
 		}
 	}
-	return buf[:totalSize], err
+	return int(totalSize), err
+}
+
+func (r *OperatorReader) Close() error {
+	free := getFFI[readerFree](r.op.ctx, symReaderFree)
+	free(r.inner)
+	return nil
 }
 
 const symOperatorRead = "opendal_operator_read"

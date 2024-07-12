@@ -8,26 +8,82 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func (op *Operator) Check() (err error) {
-	ds, err := op.List("/")
-	if err != nil {
-		return
-	}
-	if !ds.Next() {
-		return
-	}
-	err = ds.Entry().Error()
-	if err, ok := err.(*Error); ok && err.Code() == CodeNotFound {
-		return nil
-	}
-	return
-}
-
+// Copy duplicates a file from the source path to the destination path.
+//
+// This function copies the contents of the file at 'from' to a new or existing file at 'to'.
+//
+// # Parameters
+//
+//   - from: The source file path.
+//   - to: The destination file path.
+//
+// # Returns
+//
+//   - error: An error if the copy operation fails, or nil if successful.
+//
+// # Behavior
+//
+//   - Both 'from' and 'to' must be file paths, not directories.
+//   - If 'to' already exists, it will be overwritten.
+//   - If 'from' and 'to' are identical, an 'IsSameFile' error will be returned.
+//   - The copy operation is idempotent; repeated calls with the same parameters will yield the same result.
+//
+// # Example
+//
+//	func main() {
+//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		err = op.Copy("path/from/file", "path/to/file")
+//		if err != nil {
+//			log.Printf("Copy operation failed: %v", err)
+//		} else {
+//			log.Println("File copied successfully")
+//		}
+//	}
+//
+// Note: This example assumes proper error handling and import statements.
 func (op *Operator) Copy(src, dest string) error {
 	cp := getFFI[operatorCopy](op.ctx, symOperatorCopy)
 	return cp(op.inner, src, dest)
 }
 
+// Rename changes the name or location of a file from the source path to the destination path.
+//
+// This function moves a file from 'from' to 'to', effectively renaming or relocating it.
+//
+// # Parameters
+//
+//   - from: The current file path.
+//   - to: The new file path.
+//
+// # Returns
+//
+//   - error: An error if the rename operation fails, or nil if successful.
+//
+// # Behavior
+//
+//   - Both 'from' and 'to' must be file paths, not directories.
+//   - If 'to' already exists, it will be overwritten.
+//   - If 'from' and 'to' are identical, an 'IsSameFile' error will be returned.
+//
+// # Example
+//
+//	func main() {
+//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		err = op.Rename("path/from/file", "path/to/file")
+//		if err != nil {
+//			log.Printf("Rename operation failed: %v", err)
+//		} else {
+//			log.Println("File renamed successfully")
+//		}
+//	}
+//
+// Note: This example assumes proper error handling and import statements.
 func (op *Operator) Rename(src, dest string) error {
 	rename := getFFI[operatorRename](op.ctx, symOperatorRename)
 	return rename(op.inner, src, dest)

@@ -1,5 +1,7 @@
 ## opendal go binding
 
+![behavior_test](https://github.com/yuchanns/opendal/workflows/behavior_test/badge.svg?branch=main)
+
 ```bash
 go get go.yuchanns.xyz/opendal
 ```
@@ -17,17 +19,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/yuchanns/opendal-go-services/aliyun_drive"
+	"github.com/yuchanns/opendal-go-services/memory"
 	"go.yuchanns.xyz/opendal"
 )
 
 func main() {
-	op, _ := opendal.NewOperator(aliyun_drive.Scheme, opendal.OperatorOptions{
-		"client_id":     os.Getenv("OPENDAL_ALIYUN_DRIVE_CLIENT_ID"),
-		"client_secret": os.Getenv("OPENDAL_ALIYUN_DRIVE_CLIENT_ID"),
-		"refresh_token": os.Getenv("OPENDAL_ALIYUN_DRIVE_REFRESH_TOKEN"),
-		"root":          "/opendal",
-	})
+	op, _ := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
 	// Write to /opendal/test
 	op.Write("test", []byte("Hello opendal go binding!"))
 	// Read from /opendal/test
