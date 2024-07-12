@@ -2,7 +2,6 @@ package opendal
 
 import (
 	"context"
-	"runtime"
 	"unsafe"
 
 	"github.com/jupiterrider/ffi"
@@ -45,10 +44,9 @@ func (op *Operator) Check() (err error) {
 	if err != nil {
 		return
 	}
-	if !ds.Next() {
-		return
-	}
-	err = ds.Entry().Error()
+	defer ds.Close()
+	ds.Next()
+	err = ds.Error()
 	if err, ok := err.(*Error); ok && err.Code() == CodeNotFound {
 		return nil
 	}
@@ -115,12 +113,8 @@ func (op *Operator) List(path string) (*Lister, error) {
 	}
 	lister := &Lister{
 		inner: inner,
-		op:    op,
+		ctx:   op.ctx,
 	}
-	runtime.SetFinalizer(lister, func(_ *Lister) {
-		free := getFFI[listerFree](op.ctx, symListerFree)
-		free(inner)
-	})
 	return lister, nil
 }
 
@@ -158,8 +152,20 @@ func (op *Operator) List(path string) (*Lister, error) {
 //	}
 type Lister struct {
 	inner *opendalLister
-	op    *Operator // hold the op pointer to ensure it is gc after Lister instance.
+	ctx   context.Context
 	entry *Entry
+	err   error
+}
+
+func (l *Lister) Close() error {
+	free := getFFI[listerFree](l.ctx, symListerFree)
+	free(l.inner)
+
+	return nil
+}
+
+func (l *Lister) Error() error {
+	return l.err
 }
 
 // Next advances the Lister to the next entry in the list.
@@ -199,23 +205,15 @@ type Lister struct {
 //		fmt.Println(entry.Name())
 //	}
 func (l *Lister) Next() bool {
-	next := getFFI[listerNext](l.op.ctx, symListerNext)
+	next := getFFI[listerNext](l.ctx, symListerNext)
 	inner, err := next(l.inner)
-	if inner == nil && err == nil {
+	if inner == nil || err != nil {
+		l.err = err
 		l.entry = nil
 		return false
 	}
 
-	entry := &Entry{
-		op:    l.op,
-		inner: inner,
-		err:   err,
-	}
-
-	runtime.SetFinalizer(entry, func(_ *Entry) {
-		free := getFFI[entryFree](l.op.ctx, symEntryFree)
-		free(inner)
-	})
+	entry := newEntry(l.ctx, inner)
 
 	l.entry = entry
 	return true
@@ -263,32 +261,32 @@ func (l *Lister) Entry() *Entry {
 // Entry provides methods to access basic information:
 //   - Path(): Returns the full path of the entry.
 //   - Name(): Returns the name of the entry (last component of the path).
-//   - Error(): Returns any error associated with this entry.
-//
-// Note: Always check Entry.Error() before using other methods to ensure
-// the entry is valid and no errors occurred during its retrieval.
 type Entry struct {
-	op    *Operator // hold the op pointer to ensure it is gc after Entry instance.
-	inner *opendalEntry
-	err   error
+	name string
+	path string
 }
 
-// Error returns any opendal.Error associated with this entry.
-// Returns nil if no error occurred.
-func (e *Entry) Error() error {
-	return e.err
+func newEntry(ctx context.Context, inner *opendalEntry) *Entry {
+	name := getFFI[entryName](ctx, symEntryName)
+	path := getFFI[entryPath](ctx, symEntryPath)
+	free := getFFI[entryFree](ctx, symEntryFree)
+
+	defer free(inner)
+
+	return &Entry{
+		name: name(inner),
+		path: path(inner),
+	}
 }
 
 // Name returns the last component of the entry's path.
 func (e *Entry) Name() string {
-	name := getFFI[entryName](e.op.ctx, symEntryName)
-	return name(e.inner)
+	return e.name
 }
 
 // Path returns the full path of the entry.
 func (e *Entry) Path() string {
-	path := getFFI[entryPath](e.op.ctx, symEntryPath)
-	return path(e.inner)
+	return e.path
 }
 
 const symOperatorList = "opendal_operator_list"

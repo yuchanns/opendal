@@ -39,11 +39,11 @@ func testListDir(assert *require.Assertions, op *opendal.Operator, fixture *fixt
 
 	obs, err := op.List(parent)
 	assert.Nil(err)
+	defer obs.Close()
 
 	var found bool
 	for obs.Next() {
 		entry := obs.Entry()
-		assert.Nil(entry.Error())
 
 		if entry.Path() != path {
 			continue
@@ -56,6 +56,7 @@ func testListDir(assert *require.Assertions, op *opendal.Operator, fixture *fixt
 		found = true
 		break
 	}
+	assert.Nil(obs.Error())
 	assert.True(found, "file must be found in list")
 }
 
@@ -66,10 +67,11 @@ func testListPrefix(assert *require.Assertions, op *opendal.Operator, fixture *f
 
 	obs, err := op.List(path[:len(path)-1])
 	assert.Nil(err)
+	defer obs.Close()
 	assert.True(obs.Next())
+	assert.Nil(obs.Error())
 
 	entry := obs.Entry()
-	assert.Nil(entry.Error())
 	assert.Equal(path, entry.Path())
 }
 
@@ -86,12 +88,13 @@ func testListRichDir(assert *require.Assertions, op *opendal.Operator, fixture *
 
 	obs, err := op.List(parent)
 	assert.Nil(err)
+	defer obs.Close()
 	var actual []string
 	for obs.Next() {
 		entry := obs.Entry()
-		assert.Nil(entry.Error())
 		actual = append(actual, entry.Path())
 	}
+	assert.Nil(obs.Error())
 
 	slices.Sort(expected)
 	slices.Sort(actual)
@@ -106,25 +109,27 @@ func testListEmptyDir(assert *require.Assertions, op *opendal.Operator, fixture 
 
 	obs, err := op.List(dir)
 	assert.Nil(err)
+	defer obs.Close()
 	var paths []string
 	for obs.Next() {
 		entry := obs.Entry()
-		assert.Nil(entry.Error())
 		paths = append(paths, entry.Path())
 	}
+	assert.Nil(obs.Error())
 	assert.Equal(0, len(paths), "dir should only return empty")
 
 	obs, err = op.List(strings.TrimSuffix(dir, "/"))
 	assert.Nil(err)
+	defer obs.Close()
 	for obs.Next() {
 		entry := obs.Entry()
-		assert.Nil(entry.Error())
 		path := entry.Path()
 		paths = append(paths, path)
 		meta, err := op.Stat(path)
 		assert.Nil(err, "given dir should exist")
 		assert.True(meta.IsDir(), "given dir must be dir, but found: %v", path)
 	}
+	assert.Nil(obs.Error())
 	assert.Equal(1, len(paths), "only return the dir iteself, but found: %v", paths)
 }
 
@@ -133,6 +138,7 @@ func testListNonExistDir(assert *require.Assertions, op *opendal.Operator, fixtu
 
 	obs, err := op.List(dir)
 	assert.Nil(err)
+	defer obs.Close()
 	assert.False(obs.Next(), "dir should only return empty")
 }
 
@@ -143,17 +149,18 @@ func testListSubDir(assert *require.Assertions, op *opendal.Operator, fixture *f
 
 	obs, err := op.List("/")
 	assert.Nil(err)
+	defer obs.Close()
 
 	var found bool
 	for obs.Next() {
 		entry := obs.Entry()
-		assert.Nil(entry.Error())
 		if path != entry.Path() {
 			continue
 		}
 		found = true
 		break
 	}
+	assert.Nil(obs.Error())
 	assert.True(found, "dir should be found in list")
 }
 
@@ -170,23 +177,24 @@ func testListNestedDir(assert *require.Assertions, op *opendal.Operator, fixture
 
 	obs, err := op.List(parent)
 	assert.Nil(err)
+	defer obs.Close()
 	var paths []string
 	for obs.Next() {
 		entry := obs.Entry()
-		assert.Nil(entry.Error())
 		paths = append(paths, entry.Path())
 		assert.Equal(dir, entry.Path())
 	}
+	assert.Nil(obs.Error())
 	assert.Equal(1, len(paths), "parent should only got 1 entry")
 
 	obs, err = op.List(dir)
 	assert.Nil(err)
+	defer obs.Close()
 	paths = nil
 	var foundFile bool
 	var foundDir bool
 	for obs.Next() {
 		entry := obs.Entry()
-		assert.Nil(entry.Error())
 		paths = append(paths, entry.Path())
 		if entry.Path() == filePath {
 			foundFile = true
@@ -194,6 +202,7 @@ func testListNestedDir(assert *require.Assertions, op *opendal.Operator, fixture
 			foundDir = true
 		}
 	}
+	assert.Nil(obs.Error())
 	assert.Equal(2, len(paths), "parent should only got 2 entries")
 
 	assert.True(foundFile, "file should be found in list")
@@ -216,10 +225,11 @@ func testListDirWithFilePath(assert *require.Assertions, op *opendal.Operator, f
 
 	obs, err := op.List(strings.TrimSuffix(parent, "/"))
 	assert.Nil(err)
+	defer obs.Close()
 
 	for obs.Next() {
 		entry := obs.Entry()
-		assert.Nil(entry.Error())
 		assert.Equal(parent, entry.Path())
 	}
+	assert.Nil(obs.Error())
 }

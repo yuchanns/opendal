@@ -24,20 +24,31 @@ import (
 )
 
 func main() {
-	op, _ := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
+	op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
+    if err != nil {
+        panic(err)
+    }
 	// Write to /opendal/test
-	op.Write("test", []byte("Hello opendal go binding!"))
+	err = op.Write("test", []byte("Hello opendal go binding!"))
+    if err != nil {
+        panic(err)
+    }
 	// Read from /opendal/test
-	data, _ := op.Read("test")
+	data, err := op.Read("test")
+    if err != nil {
+        panic(err)
+    }
 	fmt.Printf("read: %s", data)
 	// List under /opendal
-	lister, _ := op.List("/")
+	lister, err := op.List("/")
+    if err != nil {
+        panic(err)
+    }
+    defer lister.Close()
 	// Iteratable Lister
 	for lister.Next() {
 		entry := lister.Entry()
-		if err := entry.Error(); err != nil {
-			panic(err)
-		}
+        // entry name
 		_ = entry.Name()
 		// Stat entry
 		meta, _ := op.Stat(entry.Path())
@@ -48,6 +59,9 @@ func main() {
 		// check file type
 		fmt.Printf("dir: %v, file %v", meta.IsDir(), meta.IsFile())
 	}
+    if err := lister.Error(); err != nil {
+        panic(err)
+    }
 	// Copy
 	op.Copy("test", "test_copy")
 	// Rename
