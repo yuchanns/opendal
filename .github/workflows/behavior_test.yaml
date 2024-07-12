@@ -1,0 +1,24 @@
+name: behavior_test
+on:
+  repository_dispatch:
+  workflow_dispatch:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ["aliyun_drive", "memory"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+      - name: Behavior Test
+        env:
+          OPENDAL_TEST: ${{ matrix.service }}
+          OPENDAL_ALIYUN_DRIVE_CLIENT_ID: ${{ secrets.OPENDAL_ALIYUN_DRIVE_CLIENT_ID }}
+          OPENDAL_ALIYUN_DRIVE_CLIENT_SECRET: ${{ secrets.OPENDAL_ALIYUN_DRIVE_CLIENT_SECRET }}
+          OPENDAL_ALIYUN_DRIVE_REFRESH_TOKEN: ${{ secrets.OPENDAL_ALIYUN_DRIVE_REFRESH_TOKEN }}
+          OPENDAL_ALIYUN_DRIVE_DRIVE_TYPE: 'resource'
+          OPENDAL_ALIYUN_DRIVE_ROOT: "/opendal"
