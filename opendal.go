@@ -4,12 +4,43 @@ import (
 	"context"
 )
 
+// Scheme defines the interface for storage scheme implementations.
+//
+// A Scheme represents a specific storage backend (e.g., S3, filesystem, memory)
+// and provides methods to identify and initialize the scheme.
+//
+// Implementations of this interface should be thread-safe, especially the LoadOnce method.
 type Scheme interface {
+	// Name returns the unique identifier of the scheme.
 	Name() string
+
+	// Path returns the filesystem path where the scheme's shared library (.so) is located.
 	Path() string
+
+	// LoadOnce initializes the scheme. It ensures that initialization occurs only once,
+	// even if called multiple times. Subsequent calls after the first should be no-ops.
+	//
+	// Returns an error if initialization fails.
 	LoadOnce() error
 }
 
+// OperatorOptions contains configuration parameters for creating an Operator.
+//
+// This struct allows users to specify various settings and credentials
+// required for connecting to and interacting with different storage backends.
+//
+// Fields in this struct vary depending on the storage scheme being used.
+// Refer to the documentation of specific storage backends for details on
+// required and optional fields.
+//
+// Example usage:
+//
+//	options := opendal.OperatorOptions{
+//		"root": "/path/to/root",
+//		"endpoint": "https://example.com",
+//		"access_key_id": "your_access_key",
+//		"secret_access_key": "your_secret_key",
+//	}
 type OperatorOptions map[string]string
 
 // Operator is the entry point for all public APIs in OpenDAL.
