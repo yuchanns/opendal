@@ -1,3 +1,41 @@
+// Package opendal provides a Go binding for Apache OpenDAL (Open Data Access Layer).
+//
+// OpenDAL is a data access layer that allows users to easily interact with various
+// storage services using a unified API. This Go binding enables Go developers to
+// leverage OpenDAL's capabilities without the need for CGO.
+//
+// Key features:
+//   - Unified interface for multiple storage backends (e.g., S3, Azure Blob, local filesystem)
+//   - Native Go implementation using purego and libffi
+//   - No CGO dependency, ensuring better portability and easier cross-compilation
+//   - Supports common operations like read, write, delete, list, and metadata retrieval
+//
+// Basic usage:
+//
+//	import (
+//		"go.yuchanns.xyz/opendal"
+//		"github.com/yuchanns/opendal-go-services/memory
+//	)
+//
+//	func main() {
+//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{
+//			"root": "/path/to/root",
+//		})
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		defer op.Close()
+//
+//		// Perform operations using the operator
+//		err = op.Write("example.txt", []byte("Hello, OpenDAL!"))
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//	}
+//
+// This package aims to provide a seamless experience for Go developers working with
+// various storage systems, combining the flexibility of OpenDAL with the performance
+// and simplicity of native Go code.
 package opendal
 
 import (
