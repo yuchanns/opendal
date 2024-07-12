@@ -1,6 +1,6 @@
 ## opendal go binding
 
-![behavior_test](https://github.com/yuchanns/opendal/workflows/behavior_test/badge.svg?branch=main)
+![behavior_test](https://github.com/yuchanns/opendal/actions/workflows/behavior_test.yaml/badge.svg?branch=main)
 
 ```bash
 go get go.yuchanns.xyz/opendal
