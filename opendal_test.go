@@ -49,6 +49,7 @@ func TestBehavior(t *testing.T) {
 
 	t.Cleanup(func() {
 		fixture.Cleanup(assert)
+		op.Close()
 
 		if closeFunc != nil {
 			closeFunc()

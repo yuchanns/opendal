@@ -2,7 +2,6 @@ package opendal
 
 import (
 	"context"
-	"runtime"
 )
 
 type Scheme interface {
@@ -14,7 +13,8 @@ type Scheme interface {
 type OperatorOptions map[string]string
 
 type Operator struct {
-	ctx context.Context
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	inner *opendalOperator
 }
@@ -37,25 +37,27 @@ func NewOperator(scheme Scheme, opts OperatorOptions) (op *Operator, err error) 
 	for key, value := range opts {
 		setOptions(options, key, value)
 	}
+	defer optionsFree(options)
 
 	inner, err := getFFI[operatorNew](ctx, symOperatorNew)(scheme, options)
 	if err != nil {
-		optionsFree(options)
 		cancel()
 		return
 	}
 
-	defer optionsFree(options)
-
 	op = &Operator{
-		inner: inner,
-		ctx:   ctx,
+		inner:  inner,
+		ctx:    ctx,
+		cancel: cancel,
 	}
 
-	runtime.SetFinalizer(op, func(_ *Operator) {
-		getFFI[operatorFree](ctx, symOperatorFree)(inner)
-		cancel()
-	})
-
 	return
+}
+
+func (op *Operator) Close() error {
+	free := getFFI[operatorFree]
+	free(op.ctx, symOperatorFree)(op.inner)
+	op.cancel()
+
+	return nil
 }

@@ -21,10 +21,8 @@ func contextWithFFIs(path string) (ctx context.Context, cancel context.CancelFun
 			return
 		}
 	}
-	ctx, cancel = context.WithCancel(ctx)
 	cancel = func() {
 		purego.Dlclose(libopendal)
-		cancel()
 	}
 	return
 }
