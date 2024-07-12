@@ -96,9 +96,6 @@ func (op *Operator) Read(path string) ([]byte, error) {
 //
 //		for {
 //			n, err := r.Read(buffer)
-//			if err == io.EOF {
-//				break
-//			}
 //			if err != nil {
 //				log.Fatal(err)
 //			}
