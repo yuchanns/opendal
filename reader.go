@@ -69,7 +69,7 @@ func (op *Operator) Read(path string) ([]byte, error) {
 //
 // # Returns
 //
-//   - io.ReadCloser: A reader for accessing the file's contents.
+//   - *OperatorReader: A reader for accessing the file's contents. It implements `io.ReadCloser`.
 //   - error: An error if the reader creation fails, or nil if successful.
 //
 // # Notes
@@ -104,7 +104,7 @@ func (op *Operator) Read(path string) ([]byte, error) {
 //	}
 //
 // Note: This example assumes proper error handling and import statements.
-func (op *Operator) Reader(path string) (io.ReadCloser, error) {
+func (op *Operator) Reader(path string) (*OperatorReader, error) {
 	getReader := getFFI[operatorReader](op.ctx, symOperatorReader)
 	inner, err := getReader(op.inner, path)
 	if err != nil {
@@ -121,6 +121,8 @@ type OperatorReader struct {
 	inner *opendalReader
 	op    *Operator // // hold the op pointer to ensure it is gc after OperatorReader instance.
 }
+
+var _ io.ReadCloser = (*OperatorReader)(nil)
 
 func (r *OperatorReader) Read(buf []byte) (int, error) {
 	length := uint(len(buf))
