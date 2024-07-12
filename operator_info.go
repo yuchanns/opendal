@@ -8,6 +8,13 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// Info returns metadata about the Operator.
+//
+// This method provides access to essential information about the Operator,
+// including its storage scheme, root path, name, and capabilities.
+//
+// Returns:
+//   - *OperatorInfo: A pointer to an OperatorInfo struct containing the Operator's metadata.
 func (op *Operator) Info() *OperatorInfo {
 	newInfo := getFFI[operatorInfoNew](op.ctx, symOperatorInfoNew)
 	inner := newInfo(op.inner)
@@ -29,6 +36,11 @@ func (op *Operator) Info() *OperatorInfo {
 	}
 }
 
+// OperatorInfo provides metadata about an Operator instance.
+//
+// This struct contains essential information about the storage backend
+// and its capabilities, allowing users to query details about the
+// Operator they are working with.
 type OperatorInfo struct {
 	scheme    string
 	root      string
@@ -57,6 +69,19 @@ func (i *OperatorInfo) GetName() string {
 	return i.name
 }
 
+// Capability represents the set of operations and features supported by an Operator.
+//
+// Each field indicates the support level for a specific capability:
+//   - bool fields: false indicates no support, true indicates support.
+//   - uint fields: Represent size limits or thresholds for certain operations.
+//
+// This struct covers a wide range of capabilities including:
+//   - Basic operations: stat, read, write, delete, copy, rename, list
+//   - Advanced features: multipart uploads, presigned URLs, batch operations
+//   - Operation modifiers: cache control, content type, if-match conditions
+//
+// The capability information helps in understanding the functionalities
+// available for a specific storage backend or Operator configuration.
 type Capability struct {
 	inner *opendalCapability
 }
