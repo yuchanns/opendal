@@ -24,52 +24,67 @@ import (
 )
 
 func main() {
+	// Initialize a new in-memory operator
 	op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
-    if err != nil {
-        panic(err)
-    }
-	// Write to /opendal/test
+	if err != nil {
+		panic(err)
+	}
+	defer op.Close()
+
+	// Write data to a file named "test"
 	err = op.Write("test", []byte("Hello opendal go binding!"))
-    if err != nil {
-        panic(err)
-    }
-	// Read from /opendal/test
+	if err != nil {
+		panic(err)
+	}
+
+	// Read data from the file "test"
 	data, err := op.Read("test")
-    if err != nil {
-        panic(err)
-    }
-	fmt.Printf("read: %s", data)
-	// List under /opendal
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Read content: %s\n", data)
+
+	// List all entries under the root directory "/"
 	lister, err := op.List("/")
-    if err != nil {
-        panic(err)
-    }
-    defer lister.Close()
-	// Iteratable Lister
+	if err != nil {
+		panic(err)
+	}
+	defer lister.Close()
+
+	// Iterate through all entries
 	for lister.Next() {
 		entry := lister.Entry()
-        // entry name
+
+		// Get entry name (not used in this example)
 		_ = entry.Name()
-		// Stat entry
+
+		// Get metadata for the current entry
 		meta, _ := op.Stat(entry.Path())
-		// length
-		fmt.Printf("len: %d\n", meta.ContentLength())
-		// modified time
-		fmt.Printf("updated: %s\n", meta.LastModified())
-		// check file type
-		fmt.Printf("dir: %v, file %v", meta.IsDir(), meta.IsFile())
+
+		// Print file size
+		fmt.Printf("Size: %d bytes\n", meta.ContentLength())
+
+		// Print last modified time
+		fmt.Printf("Last modified: %s\n", meta.LastModified())
+
+		// Check if the entry is a directory or a file
+		fmt.Printf("Is directory: %v, Is file: %v\n", meta.IsDir(), meta.IsFile())
 	}
-    if err := lister.Error(); err != nil {
-        panic(err)
-    }
-	// Copy
+
+	// Check for any errors that occurred during iteration
+	if err := lister.Error(); err != nil {
+		panic(err)
+	}
+
+	// Copy a file
 	op.Copy("test", "test_copy")
-	// Rename
+
+	// Rename a file
 	op.Rename("test", "test_rename")
-	// Delete
+
+	// Delete a file
 	op.Delete("test_rename")
 }
-
 ```
 
 ## Run Tests
