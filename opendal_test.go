@@ -41,6 +41,7 @@ func TestBehavior(t *testing.T) {
 	tests = append(tests, testsRead(cap)...)
 	tests = append(tests, testsRename(cap)...)
 	tests = append(tests, testsStat(cap)...)
+	tests = append(tests, testsWrite(cap)...)
 
 	fixture := newFixture(op)
 
@@ -130,6 +131,11 @@ func genBytesWithRange(min, max uint) ([]byte, uint) {
 	_, _ = rand.Read(content)
 
 	return content, size
+}
+
+func genFixedBytes(size uint) []byte {
+	content, _ := genBytesWithRange(size, size)
+	return content
 }
 
 type fixture struct {
