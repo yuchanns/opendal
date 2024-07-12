@@ -2,7 +2,6 @@ package opendal
 
 import (
 	"context"
-	"runtime"
 	"time"
 	"unsafe"
 
@@ -10,45 +9,49 @@ import (
 )
 
 type Metadata struct {
-	inner *opendalMetadata
-	op    *Operator // hold the op pointer to ensure it is gc after Metadata instance.
+	contentLength uint64
+	isFile        bool
+	isDir         bool
+	lastModified  time.Time
 }
 
-func newMetadata(op *Operator, inner *opendalMetadata) *Metadata {
-	m := &Metadata{
-		op:    op,
-		inner: inner,
+func newMetadata(ctx context.Context, inner *opendalMetadata) *Metadata {
+	getLength := getFFI[metaContentLength](ctx, symMetadataContentLength)
+	isFile := getFFI[metaIsFile](ctx, symMetadataIsFile)
+	isDir := getFFI[metaIsDir](ctx, symMetadataIsDir)
+	getLastModified := getFFI[metaLastModified](ctx, symMetadataLastModified)
+
+	var lastModified time.Time
+	ms := getLastModified(inner)
+	if ms != -1 {
+		lastModified = time.UnixMilli(ms)
 	}
-	runtime.SetFinalizer(m, func(_ *Metadata) {
-		free := getFFI[metaFree](op.ctx, symMetadataFree)
-		free(inner)
-	})
-	return m
+
+	free := getFFI[metaFree](ctx, symMetadataFree)
+	defer free(inner)
+
+	return &Metadata{
+		contentLength: getLength(inner),
+		isFile:        isFile(inner),
+		isDir:         isDir(inner),
+		lastModified:  lastModified,
+	}
 }
 
 func (m *Metadata) ContentLength() uint64 {
-	length := getFFI[metaContentLength](m.op.ctx, symMetadataContentLength)
-	return length(m.inner)
+	return m.contentLength
 }
 
 func (m *Metadata) IsFile() bool {
-	isFile := getFFI[metaIsFile](m.op.ctx, symMetadataIsFile)
-	return isFile(m.inner)
+	return m.isFile
 }
 
 func (m *Metadata) IsDir() bool {
-	isDir := getFFI[metaIsDir](m.op.ctx, symMetadataIsDir)
-	return isDir(m.inner)
+	return m.isDir
 }
 
 func (m *Metadata) LastModified() time.Time {
-	lastModifiedMs := getFFI[metaLastModified](m.op.ctx, symMetadataLastModified)
-	ms := lastModifiedMs(m.inner)
-	if ms == -1 {
-		var zeroTime time.Time
-		return zeroTime
-	}
-	return time.UnixMilli(ms)
+	return m.lastModified
 }
 
 type metaContentLength func(m *opendalMetadata) uint64
