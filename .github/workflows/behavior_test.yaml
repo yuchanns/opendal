@@ -22,3 +22,6 @@ jobs:
           OPENDAL_ALIYUN_DRIVE_REFRESH_TOKEN: ${{ secrets.OPENDAL_ALIYUN_DRIVE_REFRESH_TOKEN }}
           OPENDAL_ALIYUN_DRIVE_DRIVE_TYPE: 'resource'
           OPENDAL_ALIYUN_DRIVE_ROOT: "/opendal"
+          CGO_ENABLE: "0"
+          GOMAXPROCS: "1"
+        run: go test -v -run TestBehavior
