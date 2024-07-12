@@ -8,6 +8,10 @@ import (
 	"github.com/jupiterrider/ffi"
 )
 
+// Metadata represents essential information about a file or directory.
+//
+// This struct contains basic attributes commonly used in file systems
+// and object storage systems.
 type Metadata struct {
 	contentLength uint64
 	isFile        bool
@@ -38,18 +42,26 @@ func newMetadata(ctx context.Context, inner *opendalMetadata) *Metadata {
 	}
 }
 
+// ContentLength returns the size of the file in bytes.
+//
+// For directories, this value may not be meaningful and could be zero.
 func (m *Metadata) ContentLength() uint64 {
 	return m.contentLength
 }
 
+// IsFile returns true if the metadata represents a file, false otherwise.
 func (m *Metadata) IsFile() bool {
 	return m.isFile
 }
 
+// IsDir returns true if the metadata represents a directory, false otherwise.
 func (m *Metadata) IsDir() bool {
 	return m.isDir
 }
 
+// LastModified returns the time when the file or directory was last modified.
+//
+// The returned time is in UTC.
 func (m *Metadata) LastModified() time.Time {
 	return m.lastModified
 }

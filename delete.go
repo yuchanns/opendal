@@ -8,6 +8,19 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// Delete removes the file or directory at the specified path.
+//
+// # Parameters
+//
+//   - path: The path of the file or directory to delete.
+//
+// # Returns
+//
+//   - error: An error if the deletion fails, or nil if successful.
+//
+// # Note
+//
+// Use with caution as this operation is irreversible.
 func (op *Operator) Delete(path string) error {
 	delete := getFFI[operatorDelete](op.ctx, symOperatorDelete)
 	return delete(op.inner, path)

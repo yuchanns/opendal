@@ -149,6 +149,8 @@ type Lister struct {
 	err   error
 }
 
+// This method implements the io.Closer interface. It should be called when
+// the Lister is no longer needed to ensure proper resource cleanup.
 func (l *Lister) Close() error {
 	free := getFFI[listerFree](l.ctx, symListerFree)
 	free(l.inner)

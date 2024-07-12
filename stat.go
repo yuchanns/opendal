@@ -51,6 +51,33 @@ func (op *Operator) Stat(path string) (*Metadata, error) {
 	return newMetadata(op.ctx, meta), nil
 }
 
+// IsExist checks if a file or directory exists at the specified path.
+//
+// This method provides a convenient way to determine the existence of a resource
+// without fetching its full metadata.
+//
+// # Parameters
+//
+//   - path: The path of the file or directory to check.
+//
+// # Returns
+//
+//   - bool: true if the resource exists, false otherwise.
+//   - error: An error if the check operation fails, or nil if the check is successful.
+//     Note that a false return value with a nil error indicates that the resource does not exist.
+//
+// # Example
+//
+//	exists, err := op.IsExist("path/to/file")
+//	if err != nil {
+//		log.Fatalf("Error checking existence: %v", err)
+//	}
+//	if exists {
+//		fmt.Println("The file exists")
+//	} else {
+//		fmt.Println("The file does not exist")
+//	}
+//
 func (op *Operator) IsExist(path string) (bool, error) {
 	isExist := getFFI[operatorIsExist](op.ctx, symOperatorIsExist)
 	return isExist(op.inner, path)

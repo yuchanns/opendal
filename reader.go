@@ -115,6 +115,48 @@ type OperatorReader struct {
 
 var _ io.ReadCloser = (*OperatorReader)(nil)
 
+// Read reads data from the underlying storage into the provided buffer.
+//
+// This method implements the io.Reader interface for OperatorReader.
+//
+// # Parameters
+//
+//   - buf: A pre-allocated byte slice where the read data will be stored.
+//     The length of buf determines the maximum number of bytes to read.
+//
+// # Returns
+//
+//   - int: The number of bytes read. Returns 0 if no data is available or the end of the file is reached.
+//   - error: An error if the read operation fails, or nil if successful.
+//     Note that this method does not return io.EOF; it returns nil at the end of the file.
+//
+// # Notes
+//
+//   - This method only returns OpenDAL-specific errors, not io.EOF.
+//   - If no data is read (end of file), it returns (0, nil) instead of (0, io.EOF).
+//   - The caller is responsible for pre-allocating the buffer and determining its size.
+//
+// # Example
+//
+//	reader, err := op.Reader("path/to/file")
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	defer reader.Close()
+//
+//	buf := make([]byte, 1024)
+//	for {
+//		n, err := reader.Read(buf)
+//		if err != nil {
+//			log.Fatal(err)
+//		}
+//		if n == 0 {
+//			break // End of file
+//		}
+//		// Process buf[:n]
+//	}
+//
+// Note: Always check the number of bytes read (n) as it may be less than len(buf).
 func (r *OperatorReader) Read(buf []byte) (int, error) {
 	length := uint(len(buf))
 	read := getFFI[readerRead](r.op.ctx, symReaderRead)
@@ -133,6 +175,7 @@ func (r *OperatorReader) Read(buf []byte) (int, error) {
 	return int(totalSize), err
 }
 
+// Close releases resources associated with the OperatorReader.
 func (r *OperatorReader) Close() error {
 	free := getFFI[readerFree](r.op.ctx, symReaderFree)
 	free(r.inner)
