@@ -30,11 +30,7 @@ import (
 //
 // # Example
 //
-//	func main() {
-//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
-//		if err != nil {
-//			log.Fatal(err)
-//		}
+//	func exampleCopy(op *operatorCopy) {
 //		err = op.Copy("path/from/file", "path/to/file")
 //		if err != nil {
 //			log.Printf("Copy operation failed: %v", err)
@@ -70,11 +66,7 @@ func (op *Operator) Copy(src, dest string) error {
 //
 // # Example
 //
-//	func main() {
-//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
-//		if err != nil {
-//			log.Fatal(err)
-//		}
+//	func exampleRename(op *opendal.Operator) {
 //		err = op.Rename("path/from/file", "path/to/file")
 //		if err != nil {
 //			log.Printf("Rename operation failed: %v", err)

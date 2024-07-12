@@ -25,11 +25,7 @@ import (
 //
 // # Example
 //
-//	func main() {
-//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
-//		if err != nil {
-//			log.Fatal(err)
-//		}
+//	func exampleCheck(op *opendal.Operator) {
 //		err = op.Check()
 //		if err != nil {
 //			log.Printf("Operator check failed: %v", err)
@@ -73,11 +69,7 @@ func (op *Operator) Check() (err error) {
 //
 // # Example
 //
-//	func main() {
-//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
-//		if err != nil {
-//			log.Fatal(err)
-//		}
+//	func exampleList(op *opendal.Operator) {
 //		lister, err := op.List("test")
 //		if err != nil {
 //			log.Fatal(err)

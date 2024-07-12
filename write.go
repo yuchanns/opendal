@@ -26,11 +26,7 @@ import (
 //
 // # Example
 //
-//	func main() {
-//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
-//		if err != nil {
-//			log.Fatal(err)
-//		}
+//	func exampleWrite(op *opendal.Operator) {
 //		err = op.Write("test", []byte("Hello opendal go binding!"))
 //		if err != nil {
 //			log.Fatal(err)
@@ -69,11 +65,7 @@ func (op *Operator) Write(path string, data []byte) error {
 //
 // # Example
 //
-//	func main() {
-//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
-//		if err != nil {
-//			log.Fatal(err)
-//		}
+//	func exampleCreateDir(op *opendal.Operator) {
 //		err = op.CreateDir("test/")
 //		if err != nil {
 //			log.Fatal(err)

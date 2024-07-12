@@ -30,11 +30,7 @@ import (
 //
 // # Example
 //
-//	func main() {
-//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
-//		if err != nil {
-//			log.Fatal(err)
-//		}
+//	func exampleRead(op *opendal.Operator) {
 //		data, err := op.Read("test")
 //		if err != nil {
 //			log.Fatal(err)
@@ -79,12 +75,7 @@ func (op *Operator) Read(path string) ([]byte, error) {
 //
 // # Example
 //
-//	func main() {
-//		op, err := opendal.NewOperator(memory.Scheme, opendal.OperatorOptions{})
-//		if err != nil {
-//			log.Fatal(err)
-//		}
-//
+//	func exampleReader(op *opendal.Operator) {
 //		r, err := op.Reader("path/to/file")
 //		if err != nil {
 //			log.Fatal(err)

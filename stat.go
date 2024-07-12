@@ -8,6 +8,40 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// Stat retrieves metadata for the specified path.
+//
+// This function is a wrapper around the C-binding function `opendal_operator_stat`.
+//
+// # Parameters
+//
+//   - path: The path of the file or directory to get metadata for.
+//
+// # Returns
+//
+//   - *Metadata: Metadata of the specified path.
+//   - error: An error if the operation fails, or nil if successful.
+//
+// # Notes
+//
+//   - The current implementation does not support `stat_with` functionality.
+//   - If the path does not exist, an error with code opendal.CodeNotFound will be returned.
+//
+// # Example
+//
+//	func exampleStat(op *opendal.Operator) {
+//		meta, err := op.Stat("/path/to/file")
+//		if err != nil {
+//			if e, ok := err.(*opendal.Error); ok && e.Code() == opendal.CodeNotFound {
+//				fmt.Println("File not found")
+//				return
+//			}
+//			log.Fatalf("Stat operation failed: %v", err)
+//		}
+//		fmt.Printf("File size: %d bytes\n", meta.ContentLength())
+//		fmt.Printf("Last modified: %v\n", meta.LastModified())
+//	}
+//
+// Note: This example assumes proper error handling and import statements.
 func (op *Operator) Stat(path string) (*Metadata, error) {
 	stat := getFFI[operatorStat](op.ctx, symOperatorStat)
 	meta, err := stat(op.inner, path)
