@@ -14,12 +14,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/yuchanns/opendal-go-services/aliyun_drive"
+	"github.com/yuchanns/opendal-go-services/memory"
 	"go.yuchanns.xyz/opendal"
 )
 
 // Add more schemes for behavior tests here.
 var schemes = []opendal.Scheme{
 	aliyun_drive.Scheme,
+	memory.Scheme,
 }
 
 type behaviorTest = func(assert *require.Assertions, op *opendal.Operator, fixture *fixture)
