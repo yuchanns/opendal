@@ -1,3 +1,5 @@
+# ARCHIVED: This repo has been merged into [apache/opendal](https://github.com/apache/opendal/tree/main/bindings/go).
+
 ## opendal go binding
 
 ![behavior_test](https://github.com/yuchanns/opendal/actions/workflows/behavior_test.yaml/badge.svg?branch=main)
